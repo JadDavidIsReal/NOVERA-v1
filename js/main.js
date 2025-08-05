@@ -1,11 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const orb = document.querySelector('.orb');
+    const orbContainer = document.querySelector('.orb-container');
+    const particleField = document.querySelector('.particle-field');
 
-    if (!orb) {
-        console.error('Orb element not found!');
+    if (!orbContainer || !particleField) {
+        console.error('Core elements not found!');
         return;
     }
 
+    // --- Create Particles ---
+    const particleCount = 30;
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.setProperty('--i', i); // for staggered animations
+        particleField.appendChild(particle);
+    }
+
+    // --- State Management ---
     const AUNI_STATES = {
         IDLE: 'idle',
         LISTENING: 'listening',
@@ -13,21 +24,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentState = AUNI_STATES.IDLE;
-    const stateClasses = Object.values(AUNI_STATES).map(s => `orb--${s}`);
+    const stateClasses = Object.values(AUNI_STATES).map(s => `state--${s}`);
 
     function setState(newState) {
-        if (!Object.values(AUNI_STATES).includes(newState)) {
-            return;
-        }
+        if (!Object.values(AUNI_STATES).includes(newState)) return;
 
         currentState = newState;
-        orb.classList.remove(...stateClasses);
-        orb.classList.add(`orb--${newState}`);
+        orbContainer.classList.remove(...stateClasses);
+        orbContainer.classList.add(`state--${newState}`);
         console.log(`Auni state changed to: ${currentState}`);
     }
 
-    // Set a default class for idle animations to hook into
-    orb.classList.add(`orb--${AUNI_STATES.IDLE}`);
+    orbContainer.classList.add(`state--${AUNI_STATES.IDLE}`);
 
     window.addEventListener('keydown', (e) => {
         switch (e.key.toLowerCase()) {
@@ -44,5 +52,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    console.log("Auni Interface Initialized. Press 'L' (Listen), 'T' (Think), 'I' (Idle).");
+    console.log("Auni 'Living Aurora' Initialized. Press 'L' (Listen), 'T' (Think), 'I' (Idle).");
 });
