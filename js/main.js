@@ -1,66 +1,110 @@
+/**
+ * Auni - Phase 1B: Interactive State Logic
+ * This script handles the mock state transitions for the Auni orb interface.
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    const orb = document.querySelector('.orb');
 
-    if (!orb) {
-        console.error('Orb element not found!');
+    // --- DOM Element Selection ---
+    const orb = document.querySelector('.orb');
+    const subtitle = document.querySelector('.subtitle');
+
+    if (!orb || !subtitle) {
+        console.error('Essential elements .orb or .subtitle not found!');
         return;
     }
 
-    const AUNI_STATES = {
-        IDLE: 'idle',
-        LISTENING: 'is-listening',
-        SPEAKING: 'is-speaking',
-        LOADING: 'is-loading'
+    // --- State Management ---
+    const STATES = {
+        IDLE: { name: 'idle', text: '' },
+        LISTENING: { name: 'listening', text: 'Listening...' },
+        THINKING: { name: 'thinking', text: 'Processing...' },
+        SPEAKING: { name: 'speaking', text: 'Speaking...' },
+        LOADING: { name: 'loading', text: 'Loading...' }
     };
 
-    const stateClasses = Object.values(AUNI_STATES).filter(s => s !== 'idle');
-    let currentState = AUNI_STATES.IDLE;
+    let currentState = STATES.IDLE;
+    let isKeyHeld = false; // Flag to prevent keydown repeat triggers
     let idleTimeout;
 
-    function setState(newState) {
+    /**
+     * Sets the orb's state, updating CSS classes and subtitle text.
+     * @param {object} newState - The new state object from the STATES constant.
+     */
+    function setOrbState(newState) {
+        // Clear any pending timeout to return to idle
         clearTimeout(idleTimeout);
-        orb.classList.remove(...stateClasses);
 
-        if (newState !== AUNI_STATES.IDLE) {
-            orb.classList.add(newState);
+        // Remove all possible state classes
+        for (const key in STATES) {
+            if (STATES[key].name !== 'idle') {
+                orb.classList.remove(`orb--${STATES[key].name}`);
+            }
+        }
+        subtitle.classList.remove('visible');
+
+        // Apply new state class if not idle
+        if (newState.name !== 'idle') {
+            orb.classList.add(`orb--${newState.name}`);
+            subtitle.textContent = newState.text;
+            // Use a timeout to allow the subtitle text to be set before adding the visible class
+            setTimeout(() => subtitle.classList.add('visible'), 10);
         }
 
         currentState = newState;
-        console.log(`Auni state changed to: ${currentState}`);
+        console.log(`Auni state set to: ${currentState.name}`);
 
-        // Automatically return to idle after a period of activity
-        if (newState !== AUNI_STATES.IDLE) {
-            idleTimeout = setTimeout(() => setState(AUNI_STATES.IDLE), 4000);
+        // Set a timeout to return to idle for non-continuous states
+        if (newState !== STATES.IDLE && newState !== STATES.LISTENING) {
+            idleTimeout = setTimeout(() => setOrbState(STATES.IDLE), 3000);
         }
     }
 
+    // --- Event Binding ---
+
+    // 1. Spacebar (Press and Hold for Listening)
     window.addEventListener('keydown', (e) => {
-        // Use keydown for continuous actions like speaking/listening
-        if (e.code === 'Space') {
+        if (e.code === 'Space' && !isKeyHeld) {
             e.preventDefault();
-            if (currentState !== AUNI_STATES.LISTENING) {
-                setState(AUNI_STATES.LISTENING);
-            }
+            isKeyHeld = true;
+            setOrbState(STATES.LISTENING);
         }
     });
 
     window.addEventListener('keyup', (e) => {
         if (e.code === 'Space') {
-            setState(AUNI_STATES.IDLE);
+            e.preventDefault();
+            isKeyHeld = false;
+            setOrbState(STATES.IDLE);
         }
     });
 
-    // Use single key presses for toggle states
-    window.addEventListener('keypress', (e) => {
+    // 2. Single Key Presses (T, S, L)
+    window.addEventListener('keydown', (e) => {
+        if (isKeyHeld) return; // Ignore if space is already held
+
         switch (e.key.toLowerCase()) {
+            case 't':
+                setOrbState(STATES.THINKING);
+                break;
             case 's':
-                setState(AUNI_STATES.SPEAKING);
+                setOrbState(STATES.SPEAKING);
                 break;
             case 'l':
-                setState(AUNI_STATES.LOADING);
+                setOrbState(STATES.LOADING);
                 break;
         }
     });
 
-    console.log("Auni 'Executive Flame' Initialized. Hold [Space] to Listen. Press 'S' to Speak, 'L' to Load.");
+    // 3. Click on Orb (Toggle Listening)
+    orb.addEventListener('click', () => {
+        if (currentState === STATES.LISTENING) {
+            setOrbState(STATES.IDLE);
+        } else {
+            setOrbState(STATES.LISTENING);
+        }
+    });
+
+    // --- Initialization ---
+    console.log("Auni Interactive State Logic Initialized.");
+    console.log("Hold [Space] or Click Orb to Listen. Press T (Think), S (Speak), L (Load).");
 });
