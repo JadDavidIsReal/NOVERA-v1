@@ -1,4 +1,4 @@
-/* Auni - Visual Interface - Phase 1-A.2 */
+/* Auni - Visual Interface - Redesign */
 
 /* ---------------------------------- */
 /* GENERAL & LAYOUT                   */
@@ -7,8 +7,10 @@
 :root {
     --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
     --text-color: #f0f0f0;
-    --primary-glow: #2bd0ff;
-    --secondary-glow: #7f00ff;
+    /* New Desaturated, Enigmatic Palette */
+    --primary-glow: rgba(190, 225, 255, 0.7); /* Soft, pale blue */
+    --secondary-glow: rgba(230, 240, 255, 0.5); /* Faint white-blue */
+    --particle-color: rgba(255, 255, 255, 0.8);
 }
 
 html, body {
@@ -30,7 +32,7 @@ body {
 }
 
 /* ---------------------------------- */
-/* HEADER & FOOTER                    */
+/* HEADER & FOOTER (Unchanged)        */
 /* ---------------------------------- */
 
 .auni-header {
@@ -38,6 +40,7 @@ body {
     top: 0;
     left: 0;
     padding: 2.5rem;
+    z-index: 10;
 }
 
 .auni-header h1 {
@@ -53,6 +56,7 @@ body {
     bottom: 0;
     right: 0;
     padding: 2.5rem;
+    z-index: 10;
 }
 
 .settings-icon {
@@ -79,13 +83,12 @@ body {
 }
 
 .settings-icon:hover span {
-    background-color: var(--primary-glow);
-    opacity: 1;
+    background-color: #fff;
 }
 
 
 /* ---------------------------------- */
-/* ORB & ANIMATIONS                   */
+/* ORB REDESIGN                       */
 /* ---------------------------------- */
 
 .main-content {
@@ -109,171 +112,178 @@ body {
     min-width: 200px;
     min-height: 200px;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--primary-glow), var(--secondary-glow));
+    /* New subtle background and glow */
+    background: radial-gradient(circle, rgba(10, 20, 40, 0.5), rgba(0,0,0,0) 70%);
+    box-shadow: inset 0 0 40px 10px rgba(10, 20, 40, 0.8), 0 0 50px -10px var(--primary-glow);
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Outer Glow */
-    box-shadow: 0 0 30px -5px var(--secondary-glow), 0 0 60px -10px var(--primary-glow);
-    animation: idleBreathing 4s ease-in-out infinite, hueRotate 10s linear infinite;
+    animation: organic-breathing 8s ease-in-out infinite;
 }
 
-/* Inner Glow Effect */
-.orb::before {
-    content: '';
+/* Abstract Particle System Core */
+.particle-system {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    animation: core-rotation 25s linear infinite;
+}
+
+.particle-system span {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 95%;
-    height: 95%;
+    width: 4px;
+    height: 4px;
+    background: var(--particle-color);
     border-radius: 50%;
-    box-shadow: inset 0 0 20px 5px rgba(240, 240, 240, 0.5);
-    animation: innerGlowPulse 4s ease-in-out infinite;
-    opacity: 0.8;
+    box-shadow: 0 0 8px var(--particle-color);
+    opacity: 0;
+    animation: drift-and-fade 6s ease-in-out infinite;
 }
 
-/* Halo Ripple Effect */
+/* Asymmetrical Halo Ripples */
 .halo-ripple {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 2px solid var(--primary-glow);
-    animation: haloRipple 3.5s ease-out infinite;
-    animation-delay: 1s;
+    border: 1px solid var(--primary-glow);
+    animation: ripple-out 5s ease-out infinite;
     opacity: 0;
 }
 
-/* Core Waveform */
-.core-waveform {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    width: 60%;
-    height: 40%;
-    z-index: 1;
+.halo-ripple.halo-ripple--2 {
+    border-style: dashed;
+    border-color: var(--secondary-glow);
+    animation-delay: -2.5s; /* Offset animation */
 }
-
-.core-waveform div {
-    width: 6px;
-    margin: 0 3px;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: 2px;
-    animation: waveform 1.2s ease-in-out infinite alternate;
-}
-
-/* Staggered animation for waveform bars */
-.core-waveform div:nth-child(1) { animation-delay: 0s; }
-.core-waveform div:nth-child(2) { animation-delay: 0.2s; }
-.core-waveform div:nth-child(3) { animation-delay: 0.4s; }
-.core-waveform div:nth-child(4) { animation-delay: 0.6s; }
-.core-waveform div:nth-child(5) { animation-delay: 0.8s; }
 
 
 /* ---------------------------------- */
-/* KEYFRAMES                          */
+/* NEW KEYFRAMES                      */
 /* ---------------------------------- */
 
-@keyframes idleBreathing {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 30px -5px var(--secondary-glow), 0 0 60px -10px var(--primary-glow);
-    }
-    50% {
-        transform: scale(1.03);
-        box-shadow: 0 0 40px 0px var(--secondary-glow), 0 0 80px -5px var(--primary-glow);
-    }
+@keyframes organic-breathing {
+    0%   { transform: scale(1) rotate(0deg); }
+    25%  { transform: scale(1.02) rotate(-2deg); }
+    75%  { transform: scale(0.98) rotate(3deg); }
+    100% { transform: scale(1) rotate(0deg); }
 }
 
-@keyframes innerGlowPulse {
-    0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0.8;
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(0.97);
-        opacity: 0.6;
-    }
+@keyframes core-rotation {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
 }
 
-@keyframes haloRipple {
+@keyframes ripple-out {
     0% {
-        transform: scale(1);
+        transform: scale(0.8);
         opacity: 0.7;
     }
     100% {
-        transform: scale(1.8);
+        transform: scale(1.6);
         opacity: 0;
     }
 }
 
-@keyframes waveform {
-    from { height: 10%; opacity: 0.5; }
-    to   { height: 100%; opacity: 1; }
+@keyframes drift-and-fade {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
 }
 
-@keyframes hueRotate {
-    from { filter: hue-rotate(0deg); }
-    to   { filter: hue-rotate(360deg); }
-}
+/* Stagger particle animations for chaotic effect */
+.particle-system span:nth-child(1) { transform: translate(20px, 30px); animation-delay: -0.2s; }
+.particle-system span:nth-child(2) { transform: translate(-40px, -10px); animation-delay: -0.4s; }
+.particle-system span:nth-child(3) { transform: translate(50px, -50px); animation-delay: -0.6s; }
+.particle-system span:nth-child(4) { transform: translate(-15px, 60px); animation-delay: -0.8s; }
+.particle-system span:nth-child(5) { transform: translate(70px, 10px); animation-delay: -1.0s; }
+.particle-system span:nth-child(6) { transform: translate(-60px, 40px); animation-delay: -1.2s; }
+.particle-system span:nth-child(7) { transform: translate(30px, -70px); animation-delay: -1.4s; }
+.particle-system span:nth-child(8) { transform: translate(-20px, 20px); animation-delay: -1.6s; }
+.particle-system span:nth-child(9) { transform: translate(80px, -30px); animation-delay: -1.8s; }
+.particle-system span:nth-child(10) { transform: translate(-55px, -55px); animation-delay: -2.0s; }
+.particle-system span:nth-child(11) { transform: translate(10px, 80px); animation-delay: -2.2s; }
+.particle-system span:nth-child(12) { transform: translate(-30px, -80px); animation-delay: -2.4s; }
+.particle-system span:nth-child(13) { transform: translate(65px, 65px); animation-delay: -2.6s; }
+.particle-system span:nth-child(14) { transform: translate(0px, -45px); animation-delay: -2.8s; }
+.particle-system span:nth-child(15) { transform: translate(-45px, 0px); animation-delay: -3.0s; }
 
 
 /* ---------------------------------- */
-/* STATE-SPECIFIC STYLES & ANIMS      */
+/* STATE-SPECIFIC STYLES              */
 /* ---------------------------------- */
+
+@keyframes pulse-glow {
+    0%   { box-shadow: inset 0 0 40px 10px rgba(10, 20, 40, 0.8), 0 0 50px -10px var(--primary-glow); }
+    50%  { box-shadow: inset 0 0 50px 15px rgba(50, 70, 100, 0.8), 0 0 70px -5px var(--primary-glow); }
+    100% { box-shadow: inset 0 0 40px 10px rgba(10, 20, 40, 0.8), 0 0 50px -10px var(--primary-glow); }
+}
+
+@keyframes swarm-thinking {
+    0% { transform: translate(var(--x), var(--y)) scale(1); }
+    50% { transform: translate(0, 0) scale(0.5); /* Converge to center */ }
+    100% { transform: translate(var(--x), var(--y)) scale(1); }
+}
 
 /* --- LISTENING STATE --- */
-
-@keyframes waveform-listening {
-    0%   { height: 20%; opacity: 0.6; }
-    50%  { height: 100%; opacity: 1; }
-    100% { height: 15%; opacity: 0.7; }
+.orb.orb--listening {
+    /* More intense, focused breathing */
+    animation: organic-breathing 5s ease-in-out infinite, pulse-glow 2.5s ease-in-out infinite;
 }
-
-.orb.orb--listening .core-waveform div {
-    /* A more active and faster waveform */
-    animation: waveform-listening 0.5s ease-in-out infinite alternate;
+.orb.orb--listening .particle-system {
+    animation-duration: 15s; /* Slower, more deliberate rotation */
 }
-/* Staggered animation for listening waveform bars */
-.orb.orb--listening .core-waveform div:nth-child(1) { animation-delay: 0s; }
-.orb.orb--listening .core-waveform div:nth-child(2) { animation-delay: 0.1s; }
-.orb.orb--listening .core-waveform div:nth-child(3) { animation-delay: 0.2s; }
-.orb.orb--listening .core-waveform div:nth-child(4) { animation-delay: 0.3s; }
-.orb.orb--listening .core-waveform div:nth-child(5) { animation-delay: 0.4s; }
-
-
+.orb.orb--listening .particle-system span {
+    animation-duration: 3s; /* Faster, brighter particle drift */
+    opacity: 1; /* Always visible when listening */
+}
 .orb.orb--listening .halo-ripple {
-    /* A faster, more insistent ripple */
-    animation: haloRipple 2.5s ease-out infinite;
-    animation-delay: 0s;
+    animation-duration: 3s; /* Faster ripples */
 }
 
 /* --- THINKING STATE --- */
-
-@keyframes thinking-rotation {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to   { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
 .orb.orb--thinking {
-    /* Faster color shifting */
-    animation: idleBreathing 4s ease-in-out infinite, hueRotate 4s linear infinite;
+    animation: organic-breathing 3s ease-in-out infinite, pulse-glow 1s ease-in-out infinite;
+}
+.orb.orb--thinking .particle-system {
+    animation-duration: 4s; /* Very fast rotation */
+}
+.orb.orb--thinking .particle-system span {
+    /* Override drift animation with a swarming animation */
+    --x: 0; /* Will be set inline in HTML/JS if we want true random, but can use nth-child for now */
+    --y: 0;
+    animation: swarm-thinking 1.5s ease-in-out infinite;
+    box-shadow: 0 0 14px #fff;
+    opacity: 1;
 }
 
-.orb.orb--thinking::before {
-    /* Add a rotation to the inner glow to signify processing */
-    animation: thinking-rotation 2s linear infinite, innerGlowPulse 4s ease-in-out infinite;
-}
+/* Assign original positions to particles for swarming animation */
+.orb.orb--thinking .particle-system span:nth-child(1) { --x: 20px; --y: 30px; }
+.orb.orb--thinking .particle-system span:nth-child(2) { --x: -40px; --y: -10px; }
+.orb.orb--thinking .particle-system span:nth-child(3) { --x: 50px; --y: -50px; }
+.orb.orb--thinking .particle-system span:nth-child(4) { --x: -15px; --y: 60px; }
+.orb.orb--thinking .particle-system span:nth-child(5) { --x: 70px; --y: 10px; }
+.orb.orb--thinking .particle-system span:nth-child(6) { --x: -60px; --y: 40px; }
+.orb.orb--thinking .particle-system span:nth-child(7) { --x: 30px; --y: -70px; }
+.orb.orb--thinking .particle-system span:nth-child(8) { --x: -20px; --y: 20px; }
+.orb.orb--thinking .particle-system span:nth-child(9) { --x: 80px; --y: -30px; }
+.orb.orb--thinking .particle-system span:nth-child(10) { --x: -55px; --y: -55px; }
+.orb.orb--thinking .particle-system span:nth-child(11) { --x: 10px; --y: 80px; }
+.orb.orb--thinking .particle-system span:nth-child(12) { --x: -30px; --y: -80px; }
+.orb.orb--thinking .particle-system span:nth-child(13) { --x: 65px; --y: 65px; }
+.orb.orb--thinking .particle-system span:nth-child(14) { --x: 0px; --y: -45px; }
+.orb.orb--thinking .particle-system span:nth-child(15) { --x: -45px; --y: 0px; }
 
-.orb.orb--thinking .core-waveform div {
-    /* Make waveform bars calmer, almost hidden, as focus is on the core */
-    animation: waveform 2s ease-in-out infinite alternate;
-    opacity: 0.4;
-}
 
 /* ---------------------------------- */
-/* RESPONSIVENESS                     */
+/* RESPONSIVENESS (Unchanged)         */
 /* ---------------------------------- */
 
 @media (max-width: 768px) {
