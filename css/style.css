@@ -150,6 +150,14 @@ body {
     opacity: 1;
 }
 
+.instructions {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
 /* ---------------------------------- */
 /* BASE KEYFRAMES (IDLE)              */
 /* ---------------------------------- */
@@ -224,4 +232,11 @@ body {
 /* ---------------------------------- */
 @media (max-width: 768px) {
     .orb { width: 45vw; height: 45vw; min-width: 220px; min-height: 220px; }
+}
+
+@media (min-width: 769px) {
+    .orb {
+        pointer-events: none;
+        cursor: default;
+    }
 }
