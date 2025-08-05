@@ -1,0 +1,226 @@
+/* ----------------------------------------
+   Auni - Visual Interface (Phase 1-A.2)
+   ---------------------------------------- */
+
+/* --- General Setup --- */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh; /* Use vh for full viewport height */
+    background-color: #000000;
+    color: #f0f0f0;
+    font-family: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
+    overflow: hidden; /* No scrollbars */
+    position: relative; /* For absolute positioning of children */
+}
+
+/* --- Layout Containers --- */
+.auni-header {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    z-index: 10;
+}
+
+.main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.settings-footer {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10;
+}
+
+/* --- UI Elements --- */
+.auni-header h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+}
+
+.settings-icon {
+    width: 24px;
+    height: 18px; /* Adjusted height for 3 bars */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.settings-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: #f0f0f0;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.settings-icon:hover span {
+    background-color: #a96bff; /* A softer purple from the gradient */
+}
+
+/* --- Orb --- */
+.orb-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.orb {
+    position: relative;
+    width: 15vw;
+    height: 15vw;
+    min-width: 150px;
+    min-height: 150px;
+    max-width: 220px;
+    max-height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #2bd0ff, #7f00ff);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+/* Glow Layers */
+.inner-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: inset 0 0 20px 8px rgba(43, 208, 255, 0.6);
+}
+
+.outer-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 40px 15px rgba(43, 208, 255, 0.2), 0 0 80px 40px rgba(127, 0, 255, 0.2);
+}
+
+/* --- Responsiveness --- */
+@media (max-width: 768px) {
+    .orb {
+        width: 30vw;
+        height: 30vw;
+    }
+
+    .auni-header {
+        top: 1.5rem;
+        left: 1.5rem;
+    }
+
+    .auni-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .settings-footer {
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
+
+/* --- Animations & Effects --- */
+
+/* 1. Idle Breathing */
+@keyframes idleBreathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.03);
+    }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 40px 15px rgba(43, 208, 255, 0.2), 0 0 80px 40px rgba(127, 0, 255, 0.2);
+        opacity: 1;
+    }
+    50% {
+        box-shadow: 0 0 50px 20px rgba(43, 208, 255, 0.35), 0 0 90px 45px rgba(127, 0, 255, 0.35);
+        opacity: 0.8;
+    }
+}
+
+.orb {
+    animation: idleBreathing 4s ease-in-out infinite;
+}
+
+.outer-glow {
+    animation: glowPulse 4s ease-in-out infinite;
+}
+
+/* 2. Halo Ripple */
+.ripple {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(43, 208, 255, 0.7);
+    transform: scale(0.8);
+    opacity: 0;
+    animation: haloRipple 3s ease-out infinite;
+    animation-delay: 1s; /* Stagger the start */
+    z-index: 0;
+}
+
+@keyframes haloRipple {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+/* 3. Core Waveform */
+.core-waveform {
+    position: relative;
+    width: 50%;
+    height: 50%;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    z-index: 2;
+    filter: blur(1px);
+}
+
+.core-waveform span {
+    width: 10%;
+    height: 10%; /* Start height */
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    animation: waveform 1.5s ease-in-out infinite alternate;
+}
+
+/* Stagger the animation for each bar */
+.core-waveform span:nth-child(1) { animation-delay: 0s; }
+.core-waveform span:nth-child(2) { animation-delay: 0.2s; }
+.core-waveform span:nth-child(3) { animation-delay: 0.4s; }
+.core-waveform span:nth-child(4) { animation-delay: 0.6s; }
+.core-waveform span:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes waveform {
+    from {
+        height: 5%;
+        opacity: 0.4;
+    }
+    to {
+        height: 95%;
+        opacity: 0.9;
+    }
+}
