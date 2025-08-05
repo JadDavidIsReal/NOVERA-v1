@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Keys (Development Only) ---
-    const DEEPGRAM_KEY = "cc186bd29115880294e05418214099ffff5497b8";
+    const DEEPGRAM_KEY = "e019ba41b5ac347788faffaae7b97747d7cef74b";
     const TOGETHER_API_KEY = "tgp_v1_r2rYPrNc_5JHCSKwwWJdsCkJh2JoLfTpiiRBsIpDD2g";
 
     // --- DOM Element Selection ---
