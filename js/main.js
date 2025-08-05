@@ -245,6 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (transcript) {
                 if (transcriptionDisplay) transcriptionDisplay.textContent = `"${transcript}"`;
 
+                subtitle.textContent = "Auni is Thinking...";
+                subtitle.classList.add("visible");
+
                 const aiResponse = await getAIResponse(transcript);
                 if (aiResponse) {
                     setOrbState(STATES.SPEAKING);
@@ -260,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
 
-    // 1. Spacebar for Push-to-Talk
+    // 1. Spacebar for Push-to-Talk (Desktop)
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && !isKeyHeld && currentState === STATES.IDLE) {
             e.preventDefault();
@@ -277,20 +280,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 2. Orb for Tap-to-Toggle (Mobile)
-    const handleOrbClick = () => {
-        if (currentState === STATES.IDLE) {
-            handleInteractionStart();
-        } else if (currentState === STATES.LISTENING) {
-            handleInteractionEnd();
-        }
-    };
+    // 2. Orb for Tap-and-Hold (Mobile)
+    if (isMobileDevice()) {
+        orb.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (currentState === STATES.IDLE) {
+                handleInteractionStart();
+            }
+        });
 
-    orb.addEventListener('click', handleOrbClick);
-    orb.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Prevent ghost clicks
-        handleOrbClick();
-    });
+        orb.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (currentState === STATES.LISTENING) {
+                handleInteractionEnd();
+            }
+        });
+    }
 
 
     // --- Initialization ---
@@ -310,9 +315,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Checks if the user is on a mobile device based on screen width.
+     * @returns {boolean} True if the device is considered mobile.
+     */
+    function isMobileDevice() {
+        return window.innerWidth <= 768;
+    }
+
+    /**
+     * Sets the initial instructional text based on the device type.
+     */
+    function setInitialInstructions() {
+        const instructions = document.querySelector('.instructions');
+        if (!instructions) return;
+
+        if (isMobileDevice()) {
+            instructions.textContent = "Tap and hold the orb to speak.";
+        } else {
+            instructions.textContent = "Hold [Spacebar] to talk to Auni.";
+        }
+    }
+
     // Initialize microphone on page load
     initializeMicrophone();
+    // Set instructions and device-specific listeners
+    setInitialInstructions();
+    if (isMobileDevice()) {
+        orb.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (currentState === STATES.IDLE) {
+                handleInteractionStart();
+            }
+        });
+
+        orb.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (currentState === STATES.LISTENING) {
+                handleInteractionEnd();
+            }
+        });
+    }
 
     console.log("Auni AI Logic Initialized.");
-    console.log("Hold [Space] or Click Orb to Speak.");
 });
