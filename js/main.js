@@ -31,10 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let isKeyHeld = false;
     let idleTimeout;
 
-    // --- Audio Recording ---
+    // --- Audio & AI ---
     let mediaRecorder;
     let audioChunks = [];
     let audioStream;
+    let deepgramSocket;
+    let finalTranscript = '';
 
     /**
      * Sets the orb's state, updating CSS classes and subtitle text.
@@ -109,71 +111,109 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Audio Processing Logic ---
 
     /**
-     * Starts audio recording.
+     * Sets up the WebSocket connection to Deepgram for live transcription.
      */
-    async function startRecording() {
-        try {
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
-            audioChunks = [];
+    function setupDeepgramWebSocket() {
+        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?encoding=webm&sample_rate=48000`, ['token', DEEPGRAM_KEY]);
 
-            mediaRecorder.addEventListener('dataavailable', event => {
-                audioChunks.push(event.data);
-            });
+        deepgramSocket.onopen = () => {
+            console.log('Deepgram WebSocket opened.');
+        };
 
-            mediaRecorder.start();
-            setOrbState(STATES.LISTENING);
-        } catch (error) {
-            console.error('Error accessing microphone:', error);
-            setOrbState(STATES.ERROR);
-        }
+        deepgramSocket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const transcript = data.channel.alternatives[0].transcript;
+            if (transcript && data.is_final) {
+                finalTranscript += transcript + ' ';
+            }
+            if (transcript) {
+                transcriptionDisplay.textContent = `"${finalTranscript}${transcript}"`;
+            }
+        };
+
+        deepgramSocket.onerror = (error) => {
+            console.error('Deepgram WebSocket error:', error);
+        };
+
+        deepgramSocket.onclose = () => {
+            console.log('Deepgram WebSocket closed.');
+        };
     }
 
     /**
-     * Stops audio recording and returns the audio as a Blob.
-     * @returns {Blob} The recorded audio data.
+     * Starts audio recording and live transcription.
+     */
+    async function startRecording() {
+        if (!audioStream) {
+            console.error("Audio stream is not available.");
+            setOrbState(STATES.ERROR);
+            subtitle.textContent = "Microphone not ready.";
+            return;
+        }
+
+        finalTranscript = ''; // Reset final transcript
+        transcriptionDisplay.textContent = ''; // Clear display
+        setupDeepgramWebSocket();
+
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+
+        mediaRecorder.addEventListener('dataavailable', event => {
+            if (event.data.size > 0 && deepgramSocket.readyState === WebSocket.OPEN) {
+                deepgramSocket.send(event.data);
+            }
+            audioChunks.push(event.data); // Still collect for fallback
+        });
+
+        mediaRecorder.start(250); // Start sending data in chunks
+        setOrbState(STATES.LISTENING);
+    }
+
+    /**
+     * Stops audio recording and closes the WebSocket.
+     * @returns {Blob} The complete recorded audio data.
      */
     function stopRecording() {
         return new Promise(resolve => {
-            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.addEventListener('stop', () => {
+                    if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
+                        deepgramSocket.close();
+                    }
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = []; // Clear chunks for next recording
+                    resolve(audioBlob);
+                });
+                mediaRecorder.stop();
+            } else {
                 resolve(null);
-                return;
             }
-
-            mediaRecorder.addEventListener('stop', () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                audioStream.getTracks().forEach(track => track.stop()); // Release microphone
-                resolve(audioBlob);
-            });
-
-            mediaRecorder.stop();
         });
     }
 
     /**
-     * Sends audio to Deepgram for transcription.
+     * (Fallback) Sends a complete audio blob to Deepgram for transcription.
      * @param {Blob} audioBlob - The audio data to transcribe.
      * @returns {Promise<string|null>} The transcript or null on failure.
      */
-    async function getTranscription(audioBlob) {
+    async function getFinalTranscription(audioBlob) {
+        // Use the live transcript if available and not empty
+        if (finalTranscript.trim()) {
+            return finalTranscript.trim();
+        }
+
+        // Fallback to blob upload if streaming failed
+        console.log("Streaming transcript not available, falling back to blob upload.");
         try {
             const response = await fetch('https://api.deepgram.com/v1/listen', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Token ${DEEPGRAM_KEY}`,
-                    'Content-Type': 'audio/webm'
-                },
+                headers: { 'Authorization': `Token ${DEEPGRAM_KEY}`, 'Content-Type': 'audio/webm' },
                 body: audioBlob
             });
-
-            if (!response.ok) {
-                throw new Error(`Deepgram API error: ${response.statusText}`);
-            }
-
+            if (!response.ok) throw new Error(`Deepgram API error: ${response.statusText}`);
             const data = await response.json();
             return data.results.channels[0].alternatives[0].transcript;
         } catch (error) {
-            console.error('Error getting transcription:', error);
+            console.error('Error getting final transcription:', error);
             return null;
         }
     }
@@ -191,11 +231,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioBlob = await stopRecording();
             if (!audioBlob || audioBlob.size === 0) {
                 setOrbState(STATES.IDLE);
+                // If there was no audio but a websocket was opened, close it.
+                if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
+                    deepgramSocket.close();
+                }
                 return;
             }
 
             setOrbState(STATES.THINKING);
-            const transcript = await getTranscription(audioBlob);
+            // The final transcript is now primarily from the WebSocket, with blob as fallback.
+            const transcript = await getFinalTranscription(audioBlob);
 
             if (transcript) {
                 if (transcriptionDisplay) transcriptionDisplay.textContent = `"${transcript}"`;
@@ -213,9 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 1. Spacebar listeners
+    // --- Event Listeners ---
+
+    // 1. Spacebar for Push-to-Talk
     window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && !isKeyHeld) {
+        if (e.code === 'Space' && !isKeyHeld && currentState === STATES.IDLE) {
             e.preventDefault();
             isKeyHeld = true;
             handleInteractionStart();
@@ -223,33 +270,49 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('keyup', (e) => {
-        if (e.code === 'Space') {
+        if (e.code === 'Space' && isKeyHeld) {
             e.preventDefault();
             isKeyHeld = false;
             handleInteractionEnd();
         }
     });
 
-    // 2. Orb click listeners (for mobile)
-    orb.addEventListener('mousedown', () => {
+    // 2. Orb for Tap-to-Toggle (Mobile)
+    const handleOrbClick = () => {
         if (currentState === STATES.IDLE) {
             handleInteractionStart();
         } else if (currentState === STATES.LISTENING) {
             handleInteractionEnd();
         }
-    });
-    // Prevent default touch behavior
+    };
+
+    orb.addEventListener('click', handleOrbClick);
     orb.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (currentState === STATES.IDLE) {
-            handleInteractionStart();
-        } else if (currentState === STATES.LISTENING) {
-            handleInteractionEnd();
-        }
+        e.preventDefault(); // Prevent ghost clicks
+        handleOrbClick();
     });
 
 
     // --- Initialization ---
+
+    /**
+     * Requests microphone access once and stores the stream for reuse.
+     */
+    async function initializeMicrophone() {
+        try {
+            // Store the stream to reuse it without re-asking for permission
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("Microphone access granted.");
+        } catch (error) {
+            console.error("Microphone access denied:", error);
+            setOrbState(STATES.ERROR);
+            subtitle.textContent = "Microphone access is required.";
+        }
+    }
+
+    // Initialize microphone on page load
+    initializeMicrophone();
+
     console.log("Auni AI Logic Initialized.");
     console.log("Hold [Space] or Click Orb to Speak.");
 });
