@@ -22,10 +22,11 @@ The orb is designed to feel like a living heart protected by a polished, technol
 -   **Glossy Glass Sphere**: The orb's surface is created with layered `radial-gradient`s to simulate a dark, reflective glass sphere with a sharp highlight, giving it a tangible, high-end feel.
 -   **Northern Lights Core**: The inside of the orb contains several `div`s styled with soft, transparent, multi-colored radial gradients. These layers are animated asynchronously with long durations, creating a constantly shifting, subtle "aurora borealis" effect.
 -   **Heartbeat Pulse**: The orb's primary animation is a slow, deep "heartbeat" using `transform: scale`. This gives the entire object a baseline sense of being alive.
+-   **Pulsating Radar**: Behind the orb, a series of thin, concentric circles pulse outwards, creating a sonar-like effect that provides a sense of environmental awareness.
 -   **Siri-like Particles**: The area around the orb is populated by small, soft particles. Their behavior changes drastically based on Auni's state.
 
 ## 4. State-Specific Animations
 
--   **IDLE**: The orb has its gentle heartbeat. The internal aurora shifts slowly. The external particles drift lazily in a wide, slow orbit.
--   **LISTENING**: The heartbeat becomes faster and more regular. The external particles are drawn inwards towards the orb and glow more brightly, as if capturing information.
--   **THINKING**: The heartbeat becomes very rapid. The internal aurora churns more quickly. The external particles enter a fast, tight, chaotic orbit around the orb, representing active processing.
+-   **IDLE**: The orb has its gentle heartbeat and the radar pulses slowly. External particles materialize at the edge of the radar field, glow brightly, and drift inwards towards the orb before fading away, as if being calmly consumed for ambient data.
+-   **LISTENING**: The heartbeat is faster and more regular. The radar pulses more quickly. The external particles stop drifting and instead snap into a fixed, glowing geometric constellation around the orb, as if "locked on" to an incoming signal.
+-   **THINKING**: The heartbeat becomes very rapid. The internal aurora churns more quickly and the radar pulses erratically. The external particles break formation and enter a fast, tight, chaotic orbit around the orb, representing active processing.
