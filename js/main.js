@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: 'deepseek-chat',
+                    model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
                     messages: [
                         { role: 'system', content: 'You are Auni, an elegant and efficient AI assistant. Speak clearly and concisely.' },
                         { role: 'user', content: transcript }
