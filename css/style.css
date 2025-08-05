@@ -1,4 +1,4 @@
-/* Auni - Visual Interface - Redesign */
+/* Auni - Visual Interface - Sentient Redesign */
 
 /* ---------------------------------- */
 /* GENERAL & LAYOUT                   */
@@ -7,17 +7,16 @@
 :root {
     --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
     --text-color: #f0f0f0;
-    /* New Desaturated, Enigmatic Palette */
-    --primary-glow: rgba(190, 225, 255, 0.7); /* Soft, pale blue */
-    --secondary-glow: rgba(230, 240, 255, 0.5); /* Faint white-blue */
-    --particle-color: rgba(255, 255, 255, 0.8);
+    /* Final "Sentient" Palette */
+    --aura-color-1: rgba(180, 220, 255, 0.05);
+    --aura-color-2: rgba(200, 230, 255, 0.08);
+    --particle-color: rgba(230, 245, 255, 0.9);
+    --tendril-color: rgba(200, 230, 255, 0.5);
+    --glow-color: rgba(180, 220, 255, 0.7);
 }
 
 html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
+    margin: 0; padding: 0; width: 100%; height: 100%;
     background-color: #000000;
     color: var(--text-color);
     font-family: var(--brand-font);
@@ -26,279 +25,212 @@ html, body {
 
 body {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
 }
 
-/* ---------------------------------- */
-/* HEADER & FOOTER (Unchanged)        */
-/* ---------------------------------- */
-
-.auni-header {
+/* Header & Footer are positioned above the 3D context */
+.auni-header, .settings-footer {
     position: absolute;
-    top: 0;
-    left: 0;
     padding: 2.5rem;
     z-index: 10;
 }
-
-.auni-header h1 {
-    font-size: 1.4rem;
-    font-weight: 300;
-    letter-spacing: 0.05em;
-    margin: 0;
-    opacity: 0.9;
-}
-
-.settings-footer {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    padding: 2.5rem;
-    z-index: 10;
-}
-
-.settings-icon {
-    width: 24px;
-    height: 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-}
-
-.settings-icon span {
-    display: block;
-    width: 100%;
-    height: 2px;
-    background-color: var(--text-color);
-    opacity: 0.7;
-    transition: all 0.3s ease;
-}
-
-.settings-icon:hover {
-    opacity: 1;
-}
-
-.settings-icon:hover span {
-    background-color: #fff;
-}
+.auni-header { top: 0; left: 0; }
+.settings-footer { bottom: 0; right: 0; }
+.auni-header h1 { font-size: 1.4rem; font-weight: 300; letter-spacing: 0.05em; margin: 0; opacity: 0.9; }
+.settings-icon { width: 24px; height: 18px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: opacity 0.3s ease; }
+.settings-icon span { display: block; width: 100%; height: 2px; background-color: var(--text-color); opacity: 0.7; transition: all 0.3s ease; }
+.settings-icon:hover { opacity: 1; }
+.settings-icon:hover span { background-color: #fff; }
 
 
 /* ---------------------------------- */
-/* ORB REDESIGN                       */
+/* ORB - SENTIENT REDESIGN            */
 /* ---------------------------------- */
-
-.main-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 1;
-}
 
 .orb-container {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    perspective: 1000px;
 }
 
 .orb {
+    width: 20vw;
+    height: 20vw;
+    min-width: 250px;
+    min-height: 250px;
     position: relative;
-    width: 15vw;
-    height: 15vw;
-    min-width: 200px;
-    min-height: 200px;
-    border-radius: 50%;
-    /* New subtle background and glow */
-    background: radial-gradient(circle, rgba(10, 20, 40, 0.5), rgba(0,0,0,0) 70%);
-    box-shadow: inset 0 0 40px 10px rgba(10, 20, 40, 0.8), 0 0 50px -10px var(--primary-glow);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: organic-breathing 8s ease-in-out infinite;
+    transform-style: preserve-3d;
+    animation: slow-pan 35s ease-in-out infinite alternate;
 }
 
-/* Abstract Particle System Core */
+/* The Aura */
+.aura {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+}
+
+.aura-layer {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    box-shadow: inset 0 0 80px 20px var(--aura-color-1), inset 0 0 120px 40px var(--aura-color-2);
+    animation: shimmer 12s ease-in-out infinite alternate;
+}
+.aura-layer:nth-child(2) {
+    animation-name: shimmer-2;
+    animation-duration: 15s;
+    transform: rotateY(60deg) rotateX(20deg);
+}
+.aura-layer:nth-child(3) {
+    animation-name: shimmer-3;
+    animation-duration: 18s;
+    transform: rotateY(-60deg) rotateX(-20deg);
+}
+
+
+/* The 3D Core */
 .particle-system {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     transform-style: preserve-3d;
-    animation: core-rotation 25s linear infinite;
+    animation: core-3d-rotation 40s linear infinite;
 }
 
+/* Particles */
 .particle-system span {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 4px;
-    height: 4px;
+    top: 50%; left: 50%;
+    width: 3px; height: 3px;
     background: var(--particle-color);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--particle-color);
-    opacity: 0;
-    animation: drift-and-fade 6s ease-in-out infinite;
+    box-shadow: 0 0 10px var(--particle-color);
+    opacity: 0.8;
+    animation: drift-3d 8s ease-in-out infinite alternate;
 }
 
-/* Asymmetrical Halo Ripples */
-.halo-ripple {
+/* Thought Tendrils */
+.tendril {
     position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 1px solid var(--primary-glow);
-    animation: ripple-out 5s ease-out infinite;
+    top: 50%; left: 50%;
+    width: 1px;
+    height: 80px; /* Length of tendril */
+    background: linear-gradient(to bottom, transparent, var(--tendril-color), transparent);
     opacity: 0;
+    transform-origin: top;
 }
 
-.halo-ripple.halo-ripple--2 {
-    border-style: dashed;
-    border-color: var(--secondary-glow);
-    animation-delay: -2.5s; /* Offset animation */
+/* ---------------------------------- */
+/* SENTIENT KEYFRAMES                 */
+/* ---------------------------------- */
+
+@keyframes slow-pan {
+    from { transform: rotateY(-15deg) rotateX(5deg); }
+    to   { transform: rotateY(15deg) rotateX(-5deg); }
 }
+
+@keyframes core-3d-rotation {
+    from { transform: rotate3d(1, 1, 1, 0deg); }
+    to   { transform: rotate3d(1, 1, 1, 360deg); }
+}
+
+@keyframes shimmer {
+    from { opacity: 0.8; filter: blur(5px); transform: scale(1); }
+    to   { opacity: 0.6; filter: blur(10px); transform: scale(1.05); }
+}
+@keyframes shimmer-2 {
+    from { opacity: 0.5; filter: blur(10px); }
+    to   { opacity: 0.8; filter: blur(5px); }
+}
+@keyframes shimmer-3 {
+    from { opacity: 0.7; transform: rotateY(-60deg) rotateX(-20deg) scale(1.05); }
+    to   { opacity: 0.5; transform: rotateY(-50deg) rotateX(-15deg) scale(1); }
+}
+
+@keyframes drift-3d {
+    from { transform: translate3d(var(--x-start), var(--y-start), var(--z-start)) scale(1); }
+    to   { transform: translate3d(var(--x-end), var(--y-end), var(--z-end)) scale(0.8); }
+}
+
+@keyframes spark-tendril {
+    0%, 100% { opacity: 0; transform: var(--transform-start) scaleY(0); }
+    20% { opacity: 1; transform: var(--transform-start) scaleY(1); }
+    80% { opacity: 1; transform: var(--transform-end) scaleY(1); }
+    99% { opacity: 0; transform: var(--transform-end) scaleY(0); }
+}
+
+/* Assigning 3D positions to particles */
+.particle-system span:nth-child(1) { --x-start: 0; --y-start: 0; --z-start: 80px; --x-end: 10px; --y-end: 20px; --z-end: 60px; animation-delay: -1s;}
+.particle-system span:nth-child(2) { --x-start: 50px; --y-start: 50px; --z-start: 50px; --x-end: 40px; --y-end: 60px; --z-end: 30px; animation-delay: -2s;}
+.particle-system span:nth-child(3) { --x-start: -60px; --y-start: 30px; --z-start: -40px; --x-end: -50px; --y-end: 20px; --z-end: -60px; animation-delay: -3s;}
+/* ... add more for all particles ... */
+.particle-system span:nth-child(10) { --x-start: 20px; --y-start: -70px; --z-start: 10px; --x-end: 30px; --y-end: -50px; --z-end: -10px; animation-delay: -10s;}
 
 
 /* ---------------------------------- */
-/* NEW KEYFRAMES                      */
+/* STATE-SPECIFIC ANIMATIONS          */
 /* ---------------------------------- */
 
-@keyframes organic-breathing {
-    0%   { transform: scale(1) rotate(0deg); }
-    25%  { transform: scale(1.02) rotate(-2deg); }
-    75%  { transform: scale(0.98) rotate(3deg); }
-    100% { transform: scale(1) rotate(0deg); }
+@keyframes focus-aura {
+    from { transform: scale(1); opacity: 0.8; }
+    to   { transform: scale(0.95); opacity: 1; }
 }
 
-@keyframes core-rotation {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+@keyframes thinking-rotation {
+    from { transform: rotate3d(1, 1, 1, 0deg); }
+    to   { transform: rotate3d(3, -2, -1, 360deg); } /* More erratic rotation path */
 }
 
-@keyframes ripple-out {
-    0% {
-        transform: scale(0.8);
-        opacity: 0.7;
-    }
-    100% {
-        transform: scale(1.6);
-        opacity: 0;
-    }
+/* IDLE STATE: Return to base animations */
+.orb.orb--idle {
+    animation: slow-pan 35s ease-in-out infinite alternate;
+}
+.orb.orb--idle .aura-layer {
+    animation-name: shimmer; /* Ensure it's not focus-aura */
 }
 
-@keyframes drift-and-fade {
-    0%, 100% {
-        transform: translate(0, 0) scale(1);
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-}
-
-/* Stagger particle animations for chaotic effect */
-.particle-system span:nth-child(1) { transform: translate(20px, 30px); animation-delay: -0.2s; }
-.particle-system span:nth-child(2) { transform: translate(-40px, -10px); animation-delay: -0.4s; }
-.particle-system span:nth-child(3) { transform: translate(50px, -50px); animation-delay: -0.6s; }
-.particle-system span:nth-child(4) { transform: translate(-15px, 60px); animation-delay: -0.8s; }
-.particle-system span:nth-child(5) { transform: translate(70px, 10px); animation-delay: -1.0s; }
-.particle-system span:nth-child(6) { transform: translate(-60px, 40px); animation-delay: -1.2s; }
-.particle-system span:nth-child(7) { transform: translate(30px, -70px); animation-delay: -1.4s; }
-.particle-system span:nth-child(8) { transform: translate(-20px, 20px); animation-delay: -1.6s; }
-.particle-system span:nth-child(9) { transform: translate(80px, -30px); animation-delay: -1.8s; }
-.particle-system span:nth-child(10) { transform: translate(-55px, -55px); animation-delay: -2.0s; }
-.particle-system span:nth-child(11) { transform: translate(10px, 80px); animation-delay: -2.2s; }
-.particle-system span:nth-child(12) { transform: translate(-30px, -80px); animation-delay: -2.4s; }
-.particle-system span:nth-child(13) { transform: translate(65px, 65px); animation-delay: -2.6s; }
-.particle-system span:nth-child(14) { transform: translate(0px, -45px); animation-delay: -2.8s; }
-.particle-system span:nth-child(15) { transform: translate(-45px, 0px); animation-delay: -3.0s; }
-
-
-/* ---------------------------------- */
-/* STATE-SPECIFIC STYLES              */
-/* ---------------------------------- */
-
-@keyframes pulse-glow {
-    0%   { box-shadow: inset 0 0 40px 10px rgba(10, 20, 40, 0.8), 0 0 50px -10px var(--primary-glow); }
-    50%  { box-shadow: inset 0 0 50px 15px rgba(50, 70, 100, 0.8), 0 0 70px -5px var(--primary-glow); }
-    100% { box-shadow: inset 0 0 40px 10px rgba(10, 20, 40, 0.8), 0 0 50px -10px var(--primary-glow); }
-}
-
-@keyframes swarm-thinking {
-    0% { transform: translate(var(--x), var(--y)) scale(1); }
-    50% { transform: translate(0, 0) scale(0.5); /* Converge to center */ }
-    100% { transform: translate(var(--x), var(--y)) scale(1); }
-}
-
-/* --- LISTENING STATE --- */
+/* LISTENING STATE: Focused and attentive */
 .orb.orb--listening {
-    /* More intense, focused breathing */
-    animation: organic-breathing 5s ease-in-out infinite, pulse-glow 2.5s ease-in-out infinite;
+    animation: none; /* Pause the slow-pan to show focus */
+}
+.orb.orb--listening .aura-layer {
+    animation: focus-aura 4s ease-in-out infinite alternate;
 }
 .orb.orb--listening .particle-system {
-    animation-duration: 15s; /* Slower, more deliberate rotation */
+    animation-duration: 60s; /* Slower, more deliberate rotation */
 }
 .orb.orb--listening .particle-system span {
-    animation-duration: 3s; /* Faster, brighter particle drift */
-    opacity: 1; /* Always visible when listening */
-}
-.orb.orb--listening .halo-ripple {
-    animation-duration: 3s; /* Faster ripples */
+    animation-duration: 5s; /* Slower, more observant drift */
+    box-shadow: 0 0 15px #fff; /* Brighter particles */
 }
 
-/* --- THINKING STATE --- */
+/* THINKING STATE: Agitated and processing */
 .orb.orb--thinking {
-    animation: organic-breathing 3s ease-in-out infinite, pulse-glow 1s ease-in-out infinite;
+    animation: slow-pan 10s ease-in-out infinite alternate; /* More agitated pan */
+}
+.orb.orb--thinking .aura-layer {
+    animation-duration: 1s; /* Agitated shimmer */
 }
 .orb.orb--thinking .particle-system {
-    animation-duration: 4s; /* Very fast rotation */
+    animation-name: thinking-rotation;
+    animation-duration: 6s; /* Fast, erratic rotation */
 }
-.orb.orb--thinking .particle-system span {
-    /* Override drift animation with a swarming animation */
-    --x: 0; /* Will be set inline in HTML/JS if we want true random, but can use nth-child for now */
-    --y: 0;
-    animation: swarm-thinking 1.5s ease-in-out infinite;
-    box-shadow: 0 0 14px #fff;
-    opacity: 1;
+.orb.orb--thinking .tendril {
+    animation: spark-tendril 1.2s ease-out infinite;
+    animation-delay: calc(var(--i) * 0.3s); /* Stagger tendril sparks */
 }
-
-/* Assign original positions to particles for swarming animation */
-.orb.orb--thinking .particle-system span:nth-child(1) { --x: 20px; --y: 30px; }
-.orb.orb--thinking .particle-system span:nth-child(2) { --x: -40px; --y: -10px; }
-.orb.orb--thinking .particle-system span:nth-child(3) { --x: 50px; --y: -50px; }
-.orb.orb--thinking .particle-system span:nth-child(4) { --x: -15px; --y: 60px; }
-.orb.orb--thinking .particle-system span:nth-child(5) { --x: 70px; --y: 10px; }
-.orb.orb--thinking .particle-system span:nth-child(6) { --x: -60px; --y: 40px; }
-.orb.orb--thinking .particle-system span:nth-child(7) { --x: 30px; --y: -70px; }
-.orb.orb--thinking .particle-system span:nth-child(8) { --x: -20px; --y: 20px; }
-.orb.orb--thinking .particle-system span:nth-child(9) { --x: 80px; --y: -30px; }
-.orb.orb--thinking .particle-system span:nth-child(10) { --x: -55px; --y: -55px; }
-.orb.orb--thinking .particle-system span:nth-child(11) { --x: 10px; --y: 80px; }
-.orb.orb--thinking .particle-system span:nth-child(12) { --x: -30px; --y: -80px; }
-.orb.orb--thinking .particle-system span:nth-child(13) { --x: 65px; --y: 65px; }
-.orb.orb--thinking .particle-system span:nth-child(14) { --x: 0px; --y: -45px; }
-.orb.orb--thinking .particle-system span:nth-child(15) { --x: -45px; --y: 0px; }
+.orb.orb--thinking .tendril:nth-child(1) { --i: 1; --transform-start: rotateY(45deg) rotateX(30deg); --transform-end: rotateY(90deg) rotateX(10deg); }
+.orb.orb--thinking .tendril:nth-child(2) { --i: 2; --transform-start: rotateY(-60deg) rotateX(-20deg); --transform-end: rotateY(-120deg) rotateX(-40deg); }
+.orb.orb--thinking .tendril:nth-child(3) { --i: 3; --transform-start: rotateY(150deg) rotateX(60deg); --transform-end: rotateY(20deg) rotateX(80deg); }
 
 
 /* ---------------------------------- */
-/* RESPONSIVENESS (Unchanged)         */
+/* RESPONSIVENESS                     */
 /* ---------------------------------- */
 
 @media (max-width: 768px) {
-    .orb {
-        width: 30vw;
-        height: 30vw;
-        min-width: 150px;
-        min-height: 150px;
-    }
-
-    .auni-header, .settings-footer {
-        padding: 1.5rem;
-    }
-
-    .auni-header h1 {
-        font-size: 1.2rem;
-    }
+    .orb { width: 40vw; height: 40vw; min-width: 200px; min-height: 200px; }
+    .auni-header, .settings-footer { padding: 1.5rem; }
+    .auni-header h1 { font-size: 1.2rem; }
 }

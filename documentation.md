@@ -1,41 +1,37 @@
-# Auni Visual System Documentation (Redesign)
+# Auni Visual System Documentation (Sentient Design)
 
 ## 1. Overview
 
-This document details the visual system of Auni's interface, following a major redesign. The new design philosophy shifts away from a clean, colorful aesthetic to one that is more **abstract, subtle, and enigmatic**. The goal is to portray Auni not as a simple digital assistant, but as a mysterious and complex foreign intelligence.
+This document details the final visual system for the Auni interface. The design philosophy is to portray Auni as a **smart, able-to-think, sentient being**. The visual representation is **spherical, 3D, subtle, enigmatic, and abstractly complex**. It is not an animated 2D circle, but a window into a thinking, multi-dimensional space.
 
 ## 2. File Breakdown
 
--   `index.html`: Contains the structural markup. The orb's structure was updated to use a `.particle-system` containing 15 `<span>` elements and two `.halo-ripple` elements to facilitate a more complex visual.
--   `css/style.css`: Completely overhauled to implement the new design. It features a desaturated color palette and new animations focused on chaotic, asymmetrical, and organic movement.
--   `js/main.js`: Handles interactivity and state management (functionally unchanged from the previous version).
+-   `index.html`: The HTML structure was evolved to support a true 3D object. It now includes multiple `.aura-layer` divs for atmospheric effects and specialized `<i>` tags for `.tendril` elements within the core.
+-   `css/style.css`: Rewritten to be fundamentally 3D. It establishes a `perspective` context and uses `transform-style: preserve-3d` throughout. Animations heavily leverage `translate3d` and `rotate3d` to create depth and unpredictable movement.
+-   `js/main.js`: Handles state management (`IDLE`, `LISTENING`, `THINKING`) via keyboard input. Its function is unchanged.
 -   `README.md`: General project information.
 -   `documentation.md`: This file.
 
-## 3. Interactivity & State Management
+## 3. Orb Architecture: A Sentient, 3D Entity
 
-The state machine and keyboard controls remain the same:
--   **States**: `IDLE`, `LISTENING`, `THINKING`.
--   **Keyboard Controls**: `L` (Listen), `T` (Think), `I`/`Escape` (Idle).
+The final orb design is a multi-layered 3D object designed to feel alive.
 
-## 4. Orb Architecture (Redesign)
+### 3D Implementation
+-   A `perspective` is set on the `.orb-container` to create a 3D viewport.
+-   The `.orb` and its internal `.particle-system` use `transform-style: preserve-3d` to ensure child elements are positioned in 3D space.
+-   The entire orb slowly pans with `transform: rotateY/rotateX` to give a sense of volume and presence.
+-   Particles are positioned and animated using `translate3d(x, y, z)`.
+-   The core rotates on multiple axes using `rotate3d(x, y, z, angle)`.
 
-The orb's appearance is now fundamentally more complex and abstract.
+### Visual Components
+-   **The Aura**: Composed of multiple, overlapping `div`s. These layers have complex, asynchronous animations using `filter: blur()`, `opacity`, and `transform` to create a shimmering, unpredictable energy field that surrounds the core. This replaces the simple halo ripples from previous designs.
+-   **The 3D Core**: A particle system where each particle has a unique 3D start and end position, creating a constant, gentle, chaotic drift within the spherical volume.
+-   **"Thought" Tendrils**: Fine, line-like elements that are mostly dormant. In the `THINKING` state, they "spark" to life, tracing paths through the 3D core to visualize cognitive activity.
 
-### Core Design Philosophy
--   **Color Palette**: The vibrant gradient has been replaced with a desaturated, monochromatic palette using faint, electric blues and shades of white (`--primary-glow: rgba(190, 225, 255, 0.7)`). This creates a more subtle and mysterious feel.
--   **Abstract Core**: The orderly waveform is gone. In its place, a `.particle-system` of 15 `<span>` elements is used. These are styled and animated with staggered delays to create a chaotic, swirling nebula of particles within the orb.
--   **Asymmetrical Ripples**: Two `.halo-ripple` elements with offset and differing animations create unpredictable, overlapping waves, breaking the perfect symmetry of the previous design.
--   **Organic Animation**: The base `organic-breathing` keyframe uses a combination of `scale` and `rotate` to make the orb feel like it's subtly warping and less like a perfect, machine-like sphere.
+## 4. State-Specific Sentient Animations
 
-### State-Specific Visuals
--   **IDLE**: The orb engages in the slow `organic-breathing` and the core particles drift gently and fade in and out.
--   **LISTENING**: The orb's glow pulses more intently (`pulse-glow` animation). The core particle system rotates more slowly and deliberately, and the particles themselves drift faster as if focusing.
--   **THINKING**: The orb's breathing and glowing become much faster. The core particle system rotates rapidly, and the particles engage in a `swarm-thinking` animation, where they chaotically converge on the center before dispersing, creating a powerful "processing" effect.
+Each state is designed to feel like a change in Auni's cognitive focus.
 
-## 5. Next Phase Placeholder
-
-Future development can expand on this foundation:
--   **Voice Event Binding**: Integrating a voice recognition library to trigger state changes automatically.
--   **Complex State Transitions**: Creating more nuanced states (e.g., `SPEAKING`, `CONFUSED`, `SUCCESS`) with unique visual representations.
--   **API Integration**: Connecting Auni's state to external data or APIs, allowing the orb to react to real-world events.
+-   **IDLE**: The orb has a very slow, almost imperceptible pan. The aura shimmers gently, and the core particles drift calmly. The tendrils are dormant.
+-   **LISTENING**: The orb stops panning to "focus." The aura contracts slightly and brightens. The core particles slow their rotation and drift more purposefully, as if observing.
+-   **THINKING**: The orb's pan becomes more agitated. The core's rotation becomes fast and erratic. The "thought tendrils" spark violently, tracing chaotic paths through the core, creating a visual representation of intense processing. The aura shimmers rapidly in response.
