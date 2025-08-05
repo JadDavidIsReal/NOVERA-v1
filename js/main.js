@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Audio & AI ---
     let mediaRecorder;
-    let audioChunks = [];
     let audioStream;
     let deepgramSocket;
     let finalTranscript = '';
@@ -114,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Sets up the WebSocket connection to Deepgram for live transcription.
      */
     function setupDeepgramWebSocket() {
-        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?encoding=webm&sample_rate=48000&token=${DEEPGRAM_KEY}&voice=aura-athena-en`);
+        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?token=${DEEPGRAM_KEY}`);
 
         let keepAliveInterval;
 
@@ -129,11 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deepgramSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            if (data.channel.alternatives[0].transcript) {
-              if (data.is_final) {
-                finalTranscript += data.channel.alternatives[0].transcript + ' ';
-              }
-              transcriptionDisplay.textContent = finalTranscript + data.channel.alternatives[0].transcript;
+            const transcript = data.channel.alternatives[0].transcript;
+            if (transcript) {
+                if (data.is_final) {
+                    finalTranscript += transcript + ' ';
+                    transcriptionDisplay.textContent = finalTranscript;
+                } else {
+                    transcriptionDisplay.textContent = finalTranscript + transcript;
+                }
             }
         };
 
@@ -168,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.data.size > 0 && deepgramSocket.readyState === WebSocket.OPEN) {
                 deepgramSocket.send(event.data);
             }
-            audioChunks.push(event.data); // Still collect for fallback
         });
 
         mediaRecorder.start(250); // Start sending data in chunks
@@ -177,51 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Stops audio recording and closes the WebSocket.
-     * @returns {Blob} The complete recorded audio data.
      */
     function stopRecording() {
-        return new Promise(resolve => {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.addEventListener('stop', () => {
-                    if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
-                        deepgramSocket.close();
-                    }
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    audioChunks = []; // Clear chunks for next recording
-                    resolve(audioBlob);
-                });
-                mediaRecorder.stop();
-            } else {
-                resolve(null);
-            }
-        });
-    }
-
-    /**
-     * (Fallback) Sends a complete audio blob to Deepgram for transcription.
-     * @param {Blob} audioBlob - The audio data to transcribe.
-     * @returns {Promise<string|null>} The transcript or null on failure.
-     */
-    async function getFinalTranscription(audioBlob) {
-        // Use the live transcript if available and not empty
-        if (finalTranscript.trim()) {
-            return finalTranscript.trim();
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
         }
-
-        // Fallback to blob upload if streaming failed
-        console.log("Streaming transcript not available, falling back to blob upload.");
-        try {
-            const response = await fetch('https://api.deepgram.com/v1/listen', {
-                method: 'POST',
-                headers: { 'Authorization': `Token ${DEEPGRAM_KEY}`, 'Content-Type': 'audio/webm' },
-                body: audioBlob
-            });
-            if (!response.ok) throw new Error(`Deepgram API error: ${response.statusText}`);
-            const data = await response.json();
-            return data.results.channels[0].alternatives[0].transcript;
-        } catch (error) {
-            console.error('Error getting final transcription:', error);
-            return null;
+        if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
+            deepgramSocket.close();
         }
     }
 
@@ -233,38 +196,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const handleInteractionEnd = async () => {
+    const handleInteractionEnd = () => {
         if (currentState === STATES.LISTENING) {
-            const audioBlob = await stopRecording();
-            if (!audioBlob || audioBlob.size === 0) {
-                setOrbState(STATES.IDLE);
-                // If there was no audio but a websocket was opened, close it.
-                if (deepgramSocket && deepgramSocket.readyState === WebSocket.OPEN) {
-                    deepgramSocket.close();
-                }
-                return;
-            }
+            stopRecording();
 
-            setOrbState(STATES.THINKING);
-            // The final transcript is now primarily from the WebSocket, with blob as fallback.
-            const transcript = await getFinalTranscription(audioBlob);
+            // Use a short timeout to allow the final transcript to be processed by the WebSocket
+            setTimeout(async () => {
+                const transcript = finalTranscript.trim();
+                if (transcript) {
+                    setOrbState(STATES.THINKING);
 
-            if (transcript) {
-                if (transcriptionDisplay) transcriptionDisplay.textContent = `"${transcript}"`;
+                    subtitle.textContent = "Auni is Thinking...";
+                    subtitle.classList.add("visible");
 
-                subtitle.textContent = "Auni is Thinking...";
-                subtitle.classList.add("visible");
-
-                const aiResponse = await getAIResponse(transcript);
-                if (aiResponse) {
-                    setOrbState(STATES.SPEAKING);
-                    subtitle.textContent = aiResponse;
+                    const aiResponse = await getAIResponse(transcript);
+                    if (aiResponse) {
+                        setOrbState(STATES.SPEAKING);
+                        subtitle.textContent = aiResponse;
+                    } else {
+                        setOrbState(STATES.ERROR);
+                    }
                 } else {
-                    setOrbState(STATES.ERROR);
+                    // If no transcript was captured, just return to idle
+                    setOrbState(STATES.IDLE);
                 }
-            } else {
-                setOrbState(STATES.ERROR);
-            }
+            }, 500); // 500ms delay to wait for final transcript
         }
     };
 
