@@ -96,8 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const errorBody = await response.text();
-                console.error(`TogetherAI API error: ${response.status} ${response.statusText}`, errorBody);
-                throw new Error(`TogetherAI API error: ${response.statusText}`);
+                console.error(`TogetherAI API Error: ${response.status}`, errorBody);
+                throw new Error(`TogetherAI API request failed with status ${response.status}. See console for details.`);
             }
 
             const data = await response.json();
@@ -134,7 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error(`Deepgram API error: ${response.statusText}`);
+                const errorBody = await response.text();
+                console.error(`Deepgram API Error: ${response.status}`, errorBody);
+                throw new Error(`Deepgram API request failed with status ${response.status}. See console for details.`);
             }
 
             const data = await response.json();
@@ -177,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error(`Deepgram TTS API error: ${response.statusText}`);
+                const errorBody = await response.text();
+                console.error(`Deepgram TTS API Error: ${response.status}`, errorBody);
+                throw new Error(`Deepgram TTS API request failed with status ${response.status}. See console for details.`);
             }
 
             const audioBlob = await response.blob();
