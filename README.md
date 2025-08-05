@@ -1,16 +1,18 @@
-# Auni
+# Auni - Visual Interface
 
-**Auni is a luxury-tier AI assistant interface built for elegance, clarity, and next-gen voice interaction — starting with a world-class visual foundation.**
+## Description
 
-This project is the first phase (1-A) of development, focusing purely on the visual user interface and styling. It is built with vanilla HTML, CSS, and JavaScript, with zero dependencies.
+Auni is an elegant, voice-ready AI interface built from scratch. This phase delivers her glowing visual body — a living orb at the heart of a luxury UI.
+
+It is a visual-only foundation for the Auni digital assistant, focusing on UI polish and animation without any interactivity or functionality yet. The visual tone is designed to be premium, futuristic, minimalist, and sophisticated.
+
+## Features
+
+- **Fully Responsive:** The layout adapts seamlessly to different screen sizes, from mobile to desktop.
+- **Multi-layered Animated Orb:** The centerpiece is a dynamic, glowing orb with several layers of CSS animations to make it feel alive.
+- **No Dependencies:** This project is built with pure HTML, CSS, and an empty JavaScript file, requiring no external libraries or frameworks.
+- **Pixel-perfect Modular Styling:** The CSS is organized and commented for clarity, making it easy to understand and build upon.
 
 ## How to Run
-Simply open the `index.html` file in any modern web browser.
 
-## Features (Phase 1-A)
-
--   **Responsive, Animated Orb UI:** A dynamic and elegant central orb that serves as Auni's visual presence.
--   **Premium Minimalist Layout:** A clean, fullscreen interface that is fully responsive across desktop, tablet, and mobile devices.
--   **Zero Dependencies:** Built with pure, framework-free HTML, CSS, and JavaScript.
--   **Clean, Modular Code:** Well-structured and commented code for easy extension.
--   **Perfect Base for Interaction Stack:** The foundational UI is ready for the next phase of development, which will introduce user interaction and logic.
+No setup is required. Simply open the `index.html` file in a modern web browser.
