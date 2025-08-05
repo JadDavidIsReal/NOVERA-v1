@@ -119,8 +119,22 @@ body {
 }
 
 .subtitle-container {
-    height: 2rem; /* Reserve space */
+    /* Reserve space for two lines: transcription and subtitle */
+    height: 3.5rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.transcription {
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--subtitle-color);
+    opacity: 0.7;
+    min-height: 1.2rem; /* Reserve space */
+    margin: 0 0 0.3rem 0;
+    transition: opacity 0.3s ease;
 }
 
 .subtitle {
