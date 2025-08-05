@@ -1,24 +1,21 @@
-/* Auni - Visual Interface - Living Aurora Design */
+/* Auni - Visual Interface - Executive Flame Design */
 
 /* ---------------------------------- */
 /* PALETTE & GENERAL                  */
 /* ---------------------------------- */
-
 :root {
     --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
-    --text-color: #f0f0f0;
-    /* New "Living Aurora" Palette */
-    --dark-blue-bg: #01040a;
-    --glass-highlight: rgba(200, 230, 255, 0.15);
-    --aurora-1: rgba(0, 50, 150, 0.3);  /* Subtle Blue */
-    --aurora-2: rgba(40, 0, 80, 0.3);   /* Subtle Purple */
-    --aurora-3: rgba(0, 80, 60, 0.3);   /* Subtle Green */
-    --particle-color: rgba(200, 230, 255, 0.7);
+    --text-color: #e0e0e0;
+    /* Executive Palette */
+    --orb-bg-dark: #0a0f1a;
+    --orb-bg-light: #1a2233;
+    --glow-color: rgba(220, 225, 240, 0.8); /* Crisp, pale silver */
+    --highlight-color: rgba(230, 235, 255, 0.25);
 }
 
 html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    background-color: #000;
+    background-color: #05070a;
     color: var(--text-color);
     font-family: var(--brand-font);
     overflow: hidden;
@@ -31,9 +28,7 @@ body {
 }
 
 .auni-header, .settings-footer {
-    position: absolute;
-    padding: 2.5rem;
-    z-index: 10;
+    position: absolute; padding: 2.5rem; z-index: 10;
 }
 .auni-header { top: 0; left: 0; }
 .settings-footer { bottom: 0; right: 0; }
@@ -41,11 +36,9 @@ body {
 .settings-icon { width: 24px; height: 18px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; }
 .settings-icon span { display: block; width: 100%; height: 2px; background-color: var(--text-color); opacity: 0.7; }
 
-
 /* ---------------------------------- */
-/* ORB - LIVING AURORA DESIGN         */
+/* ORB - EXECUTIVE FLAME DESIGN       */
 /* ---------------------------------- */
-
 .orb-container {
     position: relative;
     display: flex;
@@ -60,197 +53,120 @@ body {
     min-height: 280px;
     position: relative;
     border-radius: 50%;
-    background: radial-gradient(circle at 60% 30%, var(--glass-highlight), transparent 50%),
-                radial-gradient(circle at 50% 50%, var(--dark-blue-bg), #000 80%);
-    box-shadow: inset 0 0 20px 5px #000;
-    animation: heartbeat-pulse 5s ease-in-out infinite;
+    background: radial-gradient(circle at 60% 30%, var(--orb-bg-light), var(--orb-bg-dark) 80%);
+    box-shadow: inset 0 0 50px 10px #000, 0 0 10px -2px var(--glow-color);
+    animation: breathe 8s ease-in-out infinite;
 }
 
-.aurora-core {
-    position: relative;
-    width: 100%; height: 100%;
-    transform-style: preserve-3d;
+/* Glossy Highlight */
+.orb::before {
+    content: '';
+    position: absolute;
+    top: 5%; left: 15%;
+    width: 70%; height: 40%;
     border-radius: 50%;
-    overflow: hidden;
+    background: radial-gradient(circle, var(--highlight-color), transparent 65%);
+    transform: rotate(-25deg);
 }
 
-.aurora-layer {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    border-radius: 40%; /* Irregular shape */
-    filter: blur(30px);
-    opacity: 0.8;
-    animation: shift-aurora 15s ease-in-out infinite alternate;
-}
-
-.aurora-layer:nth-child(1) {
-    background: radial-gradient(circle at 20% 20%, var(--aurora-1), transparent 50%);
-    animation-duration: 15s;
-}
-.aurora-layer:nth-child(2) {
-    background: radial-gradient(circle at 80% 30%, var(--aurora-2), transparent 60%);
-    animation-duration: 20s;
-    animation-direction: alternate-reverse;
-}
-.aurora-layer:nth-child(3) {
-    background: radial-gradient(circle at 50% 80%, var(--aurora-3), transparent 70%);
-    animation-duration: 25s;
-}
-
-.particle-field {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 200%; height: 200%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-}
-
-.radar {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 150%; height: 150%;
-    transform: translate(-50%, -50%);
-    z-index: -1; /* Place behind the orb */
-}
-
-.radar-line {
+/* Sonar Ripples */
+.orb::after {
+    content: '';
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
     border-radius: 50%;
-    border: 1px solid var(--aurora-1);
+    box-shadow: 0 0 0 2px var(--glow-color);
+    animation: sonar-ripple 4s ease-out infinite;
     opacity: 0;
-    animation: radar-pulse 6s ease-out infinite;
 }
 
-.radar-line:nth-child(2) {
-    animation-delay: -2s;
+.orb-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 8px; height: 8px;
+    margin: -4px 0 0 -4px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 15px 3px var(--glow-color);
 }
-.radar-line:nth-child(3) {
-    animation-delay: -4s;
+
+/* "Heat Haze" Flame Effect */
+.heat-haze {
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    border-radius: 50%;
+    animation: heat-shimmer 10s ease-in-out infinite alternate;
+}
+
+/* Loading Ring (hidden by default) */
+.loading-ring {
+    position: absolute;
+    top: -5%; left: -5%;
+    width: 110%; height: 110%;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--glow-color);
+    opacity: 0;
+    transform: rotate(0deg);
+    transition: opacity 0.3s ease;
 }
 
 /* ---------------------------------- */
 /* BASE KEYFRAMES (IDLE)              */
 /* ---------------------------------- */
-
-@keyframes radar-pulse {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-    50% {
-        opacity: 0.3;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0;
-    }
-}
-
-@keyframes heartbeat-pulse {
+@keyframes breathe {
     0%, 100% { transform: scale(1); }
-    10% { transform: scale(1.03); }
-    15% { transform: scale(1); }
-    20% { transform: scale(1.03); }
-    25% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
-@keyframes shift-aurora {
-    from { transform: rotate(0deg) scale(1.2); }
-    to   { transform: rotate(180deg) scale(1.5); }
+@keyframes sonar-ripple {
+    from { transform: scale(1); opacity: 0.5; }
+    to   { transform: scale(1.3); opacity: 0; }
 }
 
-@keyframes rapid-orbit {
-    from { transform: rotate(0deg) translateX(160px) rotate(0deg); }
-    to   { transform: rotate(360deg) translateX(160px) rotate(-360deg); }
+@keyframes heat-shimmer {
+    from { transform: rotate(0deg) scale(1); box-shadow: 0 0 30px -15px var(--glow-color); }
+    to   { transform: rotate(90deg) scale(1.05); box-shadow: 0 0 40px -10px var(--glow-color); }
 }
 
-@keyframes materialize-and-drift {
-    0% {
-        transform: translate(var(--x), var(--y)) scale(0);
-        opacity: 0;
-    }
-    20% {
-        opacity: 1;
-        filter: blur(0px);
-    }
-    80% {
-        opacity: 1;
-        filter: blur(0px);
-    }
-    100% {
-        transform: translate(0, 0) scale(1);
-        opacity: 0;
-        filter: blur(2px);
-    }
+@keyframes speak-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(2.5); }
 }
 
-@keyframes lock-in-formation {
-    to {
-        transform: translate(var(--x), var(--y)) scale(1.5);
-        opacity: 1;
-        filter: blur(0);
-    }
+@keyframes loading-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
 }
-
 
 /* ---------------------------------- */
-/* PARTICLE & STATE ANIMATIONS        */
+/* STATE-SPECIFIC BEHAVIORS           */
 /* ---------------------------------- */
 
-.particle {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 4px; height: 4px;
-    background: var(--particle-color);
-    border-radius: 50%;
-    filter: blur(2px);
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-    opacity: 0;
+/* LISTENING */
+.orb.is-listening::after {
+    animation-duration: 2s; /* Faster sonar ripple */
+}
+.orb.is-listening .heat-haze {
+    animation-duration: 4s; /* More intense heat shimmer */
 }
 
-/* IDLE STATE: Particles materialize, drift in, and are consumed */
-.state--idle .particle {
-    --x: calc(cos(var(--i) * 24deg) * 250px); /* Start in a circle */
-    --y: calc(sin(var(--i) * 24deg) * 250px);
-    animation-name: materialize-and-drift;
-    animation-duration: 5s;
-    animation-delay: calc(var(--i) * 0.2s);
+/* SPEAKING */
+.orb.is-speaking .orb-core {
+    animation: speak-pulse 0.5s ease-in-out infinite;
 }
 
-/* LISTENING STATE: Particles lock into a geometric constellation */
-.state--listening .orb {
-    animation-duration: 2s; /* Faster heartbeat */
-}
-.state--listening .radar-line {
-    animation-duration: 3s; /* Faster pulse */
-}
-.state--listening .particle {
-    --x: calc(cos(var(--i) * 45deg) * 200px); /* Arrange into an octagon */
-    --y: calc(sin(var(--i) * 45deg) * 200px);
-    animation: lock-in-formation 1s forwards; /* Animate once and hold */
-    box-shadow: 0 0 10px #fff;
-}
-
-/* THINKING STATE */
-.state--thinking .orb {
-    animation-duration: 0.8s; /* Rapid heartbeat */
-}
-.state--thinking .aurora-layer {
-    animation-duration: 5s; /* Agitated aurora */
-}
-.state--thinking .particle {
-    animation-name: rapid-orbit;
-    animation-duration: calc(1s + var(--i) * 0.05s);
+/* LOADING */
+.orb.is-loading .loading-ring {
+    opacity: 1;
+    animation: loading-spin 1s linear infinite;
 }
 
 /* ---------------------------------- */
 /* RESPONSIVENESS                     */
 /* ---------------------------------- */
-
 @media (max-width: 768px) {
     .orb { width: 45vw; height: 45vw; min-width: 220px; min-height: 220px; }
 }
