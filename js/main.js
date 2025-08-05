@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Sets up the WebSocket connection to Deepgram for live transcription.
      */
     function setupDeepgramWebSocket() {
-        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?token=${DEEPGRAM_KEY}`);
+        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?token=${DEEPGRAM_KEY}&interim_results=true`);
 
         let keepAliveInterval;
 
@@ -128,8 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deepgramSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const transcript = data.channel.alternatives[0].transcript;
-            if (transcript) {
+            const transcript = data.channel?.alternatives[0]?.transcript;
+
+            if (data.type === 'Results' && transcript && transcript.length > 0) {
                 if (data.is_final) {
                     finalTranscript += transcript + ' ';
                     transcriptionDisplay.textContent = finalTranscript;
@@ -196,6 +197,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    /**
+     * Converts text to speech using Deepgram and plays the audio.
+     * @param {string} text - The text to be spoken.
+     */
+    async function playAIAudioResponse(text) {
+        setOrbState(STATES.SPEAKING);
+        subtitle.textContent = text; // Show the AI's response text immediately
+
+        try {
+            const response = await fetch('https://api.deepgram.com/v1/speak?model=aura-athena-en', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${DEEPGRAM_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                const errorMessage = errorData?.reason || response.statusText;
+                throw new Error(`${errorMessage}`);
+            }
+
+            const audioBlob = await response.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+
+            audio.play();
+
+            audio.addEventListener('ended', () => {
+                setOrbState(STATES.IDLE);
+                transcriptionDisplay.textContent = '';
+            });
+
+        } catch (error) {
+            console.error('Error playing AI audio response:', error);
+            setOrbState(STATES.ERROR);
+            subtitle.textContent = `Error: ${error.message}`;
+        }
+    }
+
     const handleInteractionEnd = () => {
         if (currentState === STATES.LISTENING) {
             stopRecording();
@@ -206,18 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (transcript) {
                     setOrbState(STATES.THINKING);
 
-                    subtitle.textContent = "Auni is Thinking...";
-                    subtitle.classList.add("visible");
-
                     const aiResponse = await getAIResponse(transcript);
+
                     if (aiResponse) {
-                        setOrbState(STATES.SPEAKING);
-                        subtitle.textContent = aiResponse;
+                        await playAIAudioResponse(aiResponse);
                     } else {
                         setOrbState(STATES.ERROR);
+                        subtitle.textContent = "Failed to get AI response.";
                     }
                 } else {
-                    // If no transcript was captured, just return to idle
                     setOrbState(STATES.IDLE);
                 }
             }, 500); // 500ms delay to wait for final transcript
@@ -227,21 +267,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
 
     // 1. Spacebar for Push-to-Talk (Desktop)
-    window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' && !isKeyHeld && currentState === STATES.IDLE) {
-            e.preventDefault();
-            isKeyHeld = true;
-            handleInteractionStart();
-        }
-    });
+    if (!isMobileDevice()) {
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !isKeyHeld && currentState === STATES.IDLE) {
+                e.preventDefault();
+                isKeyHeld = true;
+                handleInteractionStart();
+            }
+        });
 
-    window.addEventListener('keyup', (e) => {
-        if (e.code === 'Space' && isKeyHeld) {
-            e.preventDefault();
-            isKeyHeld = false;
-            handleInteractionEnd();
-        }
-    });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && isKeyHeld) {
+                e.preventDefault();
+                isKeyHeld = false;
+                handleInteractionEnd();
+            }
+        });
+    }
 
     // 2. Orb for Tap-and-Hold (Mobile)
     if (isMobileDevice()) {
@@ -304,21 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeMicrophone();
     // Set instructions and device-specific listeners
     setInitialInstructions();
-    if (isMobileDevice()) {
-        orb.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (currentState === STATES.IDLE) {
-                handleInteractionStart();
-            }
-        });
-
-        orb.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (currentState === STATES.LISTENING) {
-                handleInteractionEnd();
-            }
-        });
-    }
 
     console.log("Auni AI Logic Initialized.");
 });
