@@ -1,22 +1,24 @@
-/* Auni - Visual Interface - Futuristic Tech Redesign */
+/* Auni - Visual Interface - Living Aurora Design */
 
 /* ---------------------------------- */
-/* GENERAL & LAYOUT                   */
+/* PALETTE & GENERAL                  */
 /* ---------------------------------- */
 
 :root {
     --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
     --text-color: #f0f0f0;
-    /* New "Technology Blue" Palette */
-    --tech-blue: #00BFFF; /* DeepSkyBlue */
-    --tech-glow: rgba(0, 191, 255, 0.7);
-    --dark-blue: #00008B; /* DarkBlue */
-    --orb-bg: #020024;
+    /* New "Living Aurora" Palette */
+    --dark-blue-bg: #01040a;
+    --glass-highlight: rgba(200, 230, 255, 0.15);
+    --aurora-1: rgba(0, 50, 150, 0.3);  /* Subtle Blue */
+    --aurora-2: rgba(40, 0, 80, 0.3);   /* Subtle Purple */
+    --aurora-3: rgba(0, 80, 60, 0.3);   /* Subtle Green */
+    --particle-color: rgba(200, 230, 255, 0.7);
 }
 
 html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    background-color: #000000;
+    background-color: #000;
     color: var(--text-color);
     font-family: var(--brand-font);
     overflow: hidden;
@@ -35,159 +37,156 @@ body {
 }
 .auni-header { top: 0; left: 0; }
 .settings-footer { bottom: 0; right: 0; }
-.auni-header h1 { font-size: 1.4rem; font-weight: 300; letter-spacing: 0.05em; margin: 0; opacity: 0.9; }
-.settings-icon { width: 24px; height: 18px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: opacity 0.3s ease; }
-.settings-icon span { display: block; width: 100%; height: 2px; background-color: var(--text-color); opacity: 0.7; transition: all 0.3s ease; }
-.settings-icon:hover { opacity: 1; }
-.settings-icon:hover span { background-color: var(--tech-blue); }
+.auni-header h1 { font-size: 1.4rem; font-weight: 300; letter-spacing: 0.05em; margin: 0; }
+.settings-icon { width: 24px; height: 18px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; }
+.settings-icon span { display: block; width: 100%; height: 2px; background-color: var(--text-color); opacity: 0.7; }
 
 
 /* ---------------------------------- */
-/* ORB - FUTURISTIC REDESIGN          */
+/* ORB - LIVING AURORA DESIGN         */
 /* ---------------------------------- */
 
 .orb-container {
-    perspective: 800px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .orb {
     width: 20vw;
     height: 20vw;
-    min-width: 300px;
-    min-height: 300px;
+    min-width: 280px;
+    min-height: 280px;
     position: relative;
     border-radius: 50%;
-    background: radial-gradient(circle at 65% 35%, var(--dark-blue), var(--orb-bg) 60%);
-    box-shadow: 0 0 50px -10px var(--tech-glow);
+    background: radial-gradient(circle at 60% 30%, var(--glass-highlight), transparent 50%),
+                radial-gradient(circle at 50% 50%, var(--dark-blue-bg), #000 80%);
+    box-shadow: inset 0 0 20px 5px #000;
+    animation: heartbeat-pulse 5s ease-in-out infinite;
+}
+
+.aurora-core {
+    position: relative;
+    width: 100%; height: 100%;
     transform-style: preserve-3d;
-}
-
-/* Glossy highlight effect */
-.orb-gloss {
-    position: absolute;
-    top: 10%; left: 20%;
-    width: 60%; height: 30%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
-    transform: rotate(-30deg);
-    opacity: 0.8;
+    overflow: hidden;
 }
 
-/* Central glowing core */
-.orb-core {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 10px; height: 10px;
-    margin: -5px 0 0 -5px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 0 15px 5px var(--tech-glow);
-    animation: core-pulse 4s ease-in-out infinite;
-}
-
-/* Concentric rings of data glyphs */
-.glyph-ring {
+.aurora-layer {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    border-radius: 50%;
-    transform-style: preserve-3d;
-    animation: rotate-ring 20s linear infinite;
+    border-radius: 40%; /* Irregular shape */
+    filter: blur(30px);
+    opacity: 0.8;
+    animation: shift-aurora 15s ease-in-out infinite alternate;
 }
-.glyph-ring--mid { animation-duration: 30s; animation-direction: reverse; }
-.glyph-ring--inner { animation-duration: 40s; }
 
-/* Individual glyphs */
-.glyph {
+.aurora-layer:nth-child(1) {
+    background: radial-gradient(circle at 20% 20%, var(--aurora-1), transparent 50%);
+    animation-duration: 15s;
+}
+.aurora-layer:nth-child(2) {
+    background: radial-gradient(circle at 80% 30%, var(--aurora-2), transparent 60%);
+    animation-duration: 20s;
+    animation-direction: alternate-reverse;
+}
+.aurora-layer:nth-child(3) {
+    background: radial-gradient(circle at 50% 80%, var(--aurora-3), transparent 70%);
+    animation-duration: 25s;
+}
+
+.particle-field {
     position: absolute;
     top: 50%; left: 50%;
-    width: 4px; height: 4px;
-    margin: -2px 0 0 -2px;
-    background: var(--tech-blue);
-    border-radius: 50%;
-    opacity: 0.7;
+    width: 200%; height: 200%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
-
-/* Distribute glyphs around their rings */
-.glyph-ring--outer .glyph:nth-child(1) { transform: rotateY(0deg) translateZ(150px); }
-.glyph-ring--outer .glyph:nth-child(2) { transform: rotateY(40deg) translateZ(150px); }
-/* ... more glyphs for outer ring ... */
-.glyph-ring--outer .glyph:nth-child(9) { transform: rotateY(320deg) translateZ(150px); }
-
-.glyph-ring--mid .glyph { width: 2px; height: 10px; border-radius: 0;}
-.glyph-ring--mid .glyph:nth-child(1) { transform: rotateY(0deg) translateZ(110px) rotateX(90deg); }
-.glyph-ring--mid .glyph:nth-child(2) { transform: rotateY(72deg) translateZ(110px) rotateX(90deg); }
-/* ... more glyphs for mid ring ... */
-.glyph-ring--mid .glyph:nth-child(5) { transform: rotateY(288deg) translateZ(110px) rotateX(90deg); }
-
-.glyph-ring--inner .glyph:nth-child(1) { transform: rotateX(0deg) translateZ(70px); }
-.glyph-ring--inner .glyph:nth-child(2) { transform: rotateX(120deg) translateZ(70px); }
-.glyph-ring--inner .glyph:nth-child(3) { transform: rotateX(240deg) translateZ(70px); }
-
 
 /* ---------------------------------- */
 /* BASE KEYFRAMES (IDLE)              */
 /* ---------------------------------- */
 
-@keyframes rotate-ring {
-    from { transform: rotateY(0deg) rotateX(10deg); }
-    to   { transform: rotateY(360deg) rotateX(10deg); }
+@keyframes heartbeat-pulse {
+    0%, 100% { transform: scale(1); }
+    10% { transform: scale(1.03); }
+    15% { transform: scale(1); }
+    20% { transform: scale(1.03); }
+    25% { transform: scale(1); }
 }
 
-@keyframes core-pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 15px 5px var(--tech-glow); }
-    50% { transform: scale(1.2); box-shadow: 0 0 25px 10px var(--tech-glow); }
+@keyframes shift-aurora {
+    from { transform: rotate(0deg) scale(1.2); }
+    to   { transform: rotate(180deg) scale(1.5); }
 }
 
-@keyframes scan-line {
-    from { transform: translateY(-100%) scaleY(2); opacity: 0; }
-    to   { transform: translateY(100%) scaleY(1); opacity: 0.5; }
+@keyframes lazy-drift {
+    from { transform: rotate(0deg) translateX(180px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(180px) rotate(-360deg); }
 }
 
-@keyframes glyph-flash {
-    0%, 100% { background: var(--tech-blue); }
-    50% { background: #fff; }
+@keyframes draw-inward {
+    from { transform: rotate(0deg) translateX(180px) rotate(0deg); opacity: 0.7; }
+    to   { transform: rotate(360deg) translateX(50px) rotate(-360deg); opacity: 1; }
+}
+
+@keyframes rapid-orbit {
+    from { transform: rotate(0deg) translateX(160px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(160px) rotate(-360deg); }
 }
 
 /* ---------------------------------- */
-/* STATE-SPECIFIC ANIMATIONS          */
+/* PARTICLE & STATE ANIMATIONS        */
 /* ---------------------------------- */
+
+.particle {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 3px; height: 3px;
+    background: var(--particle-color);
+    border-radius: 50%;
+    filter: blur(1px);
+    transform-origin: calc(var(--i) * 3px) center; /* Give each a slightly different origin */
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+/* IDLE STATE */
+.state--idle .particle {
+    animation-name: lazy-drift;
+    animation-duration: calc(10s + var(--i) * 0.5s); /* Vary speed */
+    animation-direction: alternate;
+}
 
 /* LISTENING STATE */
-.orb.orb--listening .glyph-ring {
-    animation-play-state: paused; /* Stop rings from rotating */
+.state--listening .orb {
+    animation-duration: 2s; /* Faster heartbeat */
 }
-.orb.orb--listening .orb-core {
-    animation-duration: 1s; /* Faster core pulse */
-}
-.orb.orb--listening::after { /* Add a scan-line effect */
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: linear-gradient(to bottom, transparent, var(--tech-glow), transparent);
-    animation: scan-line 2s ease-out infinite;
+.state--listening .particle {
+    animation-name: draw-inward;
+    animation-duration: calc(3s + var(--i) * 0.2s);
+    animation-direction: alternate;
 }
 
 /* THINKING STATE */
-.orb.orb--thinking .glyph-ring {
-    animation-duration: 5s; /* Faster rotation */
+.state--thinking .orb {
+    animation-duration: 0.8s; /* Rapid heartbeat */
 }
-.orb.orb--thinking .glyph {
-    animation: glyph-flash 0.5s linear infinite;
-    animation-delay: calc(var(--i, 1) * 0.1s); /* Stagger flash with --i custom property */
+.state--thinking .aurora-layer {
+    animation-duration: 5s; /* Agitated aurora */
 }
-.orb.orb--thinking .orb-core {
-    animation-duration: 0.5s; /* Very fast pulse */
+.state--thinking .particle {
+    animation-name: rapid-orbit;
+    animation-duration: calc(1s + var(--i) * 0.05s);
 }
-
 
 /* ---------------------------------- */
 /* RESPONSIVENESS                     */
 /* ---------------------------------- */
 
 @media (max-width: 768px) {
-    .orb { width: 45vw; height: 45vw; min-width: 250px; min-height: 250px; }
-    .auni-header, .settings-footer { padding: 1.5rem; }
-    .auni-header h1 { font-size: 1.2rem; }
+    .orb { width: 45vw; height: 45vw; min-width: 220px; min-height: 220px; }
 }
