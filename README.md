@@ -1,35 +1,16 @@
 # Auni
 
-**Auni is a responsive, voice-ready AI interface designed for luxury-minimalist interaction with modular intelligence and a glowing personality.**
+**Auni is a luxury-tier AI assistant interface built for elegance, clarity, and next-gen voice interaction — starting with a world-class visual foundation.**
 
----
+This project is the first phase (1-A) of development, focusing purely on the visual user interface and styling. It is built with vanilla HTML, CSS, and JavaScript, with zero dependencies.
 
-## Installation
+## How to Run
+Simply open the `index.html` file in any modern web browser.
 
-No setup needed. Just open `index.html` in your browser or press F5 in VSCode.
+## Features (Phase 1-A)
 
----
-
-## Features (Phase 1)
-
-- **Responsive Layout**: Adapts to both mobile and desktop screens.
-- **Visual Orb**: A central, glowing orb represents the AI's presence.
-- **Animated States**: The orb animates to reflect different states like Idle, Listening, Thinking, and Speaking.
-- **Interaction**: Control the orb's state via keyboard (Spacebar, T, S, L) and mouse clicks.
-- **Subtitle Output**: A placeholder container for future transcriptions or AI responses.
-- **Modular Codebase**: Clean, commented, and separated HTML, CSS, and JavaScript with no external dependencies.
-
----
-
-## Future Phases
-
-This section is reserved for features planned in subsequent development phases, such as:
-- Real-time voice transcription (STT)
-- Language model integration (LLM)
-- Settings panel functionality
-
----
-
-## Security Note
-
-API keys will be hardcoded in development. This repo is intended for personal use only. Do not expose this code publicly with active keys.
+-   **Responsive, Animated Orb UI:** A dynamic and elegant central orb that serves as Auni's visual presence.
+-   **Premium Minimalist Layout:** A clean, fullscreen interface that is fully responsive across desktop, tablet, and mobile devices.
+-   **Zero Dependencies:** Built with pure, framework-free HTML, CSS, and JavaScript.
+-   **Clean, Modular Code:** Well-structured and commented code for easy extension.
+-   **Perfect Base for Interaction Stack:** The foundational UI is ready for the next phase of development, which will introduce user interaction and logic.
