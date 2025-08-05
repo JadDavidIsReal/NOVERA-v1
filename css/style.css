@@ -10,7 +10,7 @@
     --orb-bg-dark: #0a0f1a;
     --orb-bg-light: #1a2233;
     --glow-color: rgba(220, 225, 240, 0.8); /* Crisp, pale silver */
-    --highlight-color: rgba(230, 235, 255, 0.25);
+    --highlight-color: rgba(230, 235, 255, 0);
 }
 
 html, body {
@@ -63,10 +63,10 @@ body {
     content: '';
     position: absolute;
     top: 5%; left: 15%;
-    width: 70%; height: 40%;
+    width: 70%; height: 20%;
     border-radius: 50%;
     background: radial-gradient(circle, var(--highlight-color), transparent 65%);
-    transform: rotate(-25deg);
+    opacity: 0.2;
 }
 
 /* Sonar Ripples */
@@ -86,8 +86,8 @@ body {
     top: 50%; left: 50%;
     width: 8px; height: 8px;
     margin: -4px 0 0 -4px;
-    border-radius: 50%;
-    background: #fff;
+    border-radius: 70%;
+    background: #ffffff42;
     box-shadow: 0 0 15px 3px var(--glow-color);
 }
 
