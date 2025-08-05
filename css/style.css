@@ -1,0 +1,294 @@
+/* Auni - Visual Interface - Phase 1-A.2 */
+
+/* ---------------------------------- */
+/* GENERAL & LAYOUT                   */
+/* ---------------------------------- */
+
+:root {
+    --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
+    --text-color: #f0f0f0;
+    --primary-glow: #2bd0ff;
+    --secondary-glow: #7f00ff;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    color: var(--text-color);
+    font-family: var(--brand-font);
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ---------------------------------- */
+/* HEADER & FOOTER                    */
+/* ---------------------------------- */
+
+.auni-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 2.5rem;
+}
+
+.auni-header h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.settings-footer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 2.5rem;
+}
+
+.settings-icon {
+    width: 24px;
+    height: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.settings-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-color);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.settings-icon:hover {
+    opacity: 1;
+}
+
+.settings-icon:hover span {
+    background-color: var(--primary-glow);
+    opacity: 1;
+}
+
+
+/* ---------------------------------- */
+/* ORB & ANIMATIONS                   */
+/* ---------------------------------- */
+
+.main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.orb-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.orb {
+    position: relative;
+    width: 15vw;
+    height: 15vw;
+    min-width: 200px;
+    min-height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--primary-glow), var(--secondary-glow));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Outer Glow */
+    box-shadow: 0 0 30px -5px var(--secondary-glow), 0 0 60px -10px var(--primary-glow);
+    animation: idleBreathing 4s ease-in-out infinite, hueRotate 10s linear infinite;
+}
+
+/* Inner Glow Effect */
+.orb::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95%;
+    height: 95%;
+    border-radius: 50%;
+    box-shadow: inset 0 0 20px 5px rgba(240, 240, 240, 0.5);
+    animation: innerGlowPulse 4s ease-in-out infinite;
+    opacity: 0.8;
+}
+
+/* Halo Ripple Effect */
+.halo-ripple {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--primary-glow);
+    animation: haloRipple 3.5s ease-out infinite;
+    animation-delay: 1s;
+    opacity: 0;
+}
+
+/* Core Waveform */
+.core-waveform {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 60%;
+    height: 40%;
+    z-index: 1;
+}
+
+.core-waveform div {
+    width: 6px;
+    margin: 0 3px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 2px;
+    animation: waveform 1.2s ease-in-out infinite alternate;
+}
+
+/* Staggered animation for waveform bars */
+.core-waveform div:nth-child(1) { animation-delay: 0s; }
+.core-waveform div:nth-child(2) { animation-delay: 0.2s; }
+.core-waveform div:nth-child(3) { animation-delay: 0.4s; }
+.core-waveform div:nth-child(4) { animation-delay: 0.6s; }
+.core-waveform div:nth-child(5) { animation-delay: 0.8s; }
+
+
+/* ---------------------------------- */
+/* KEYFRAMES                          */
+/* ---------------------------------- */
+
+@keyframes idleBreathing {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 30px -5px var(--secondary-glow), 0 0 60px -10px var(--primary-glow);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 40px 0px var(--secondary-glow), 0 0 80px -5px var(--primary-glow);
+    }
+}
+
+@keyframes innerGlowPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(0.97);
+        opacity: 0.6;
+    }
+}
+
+@keyframes haloRipple {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.8);
+        opacity: 0;
+    }
+}
+
+@keyframes waveform {
+    from { height: 10%; opacity: 0.5; }
+    to   { height: 100%; opacity: 1; }
+}
+
+@keyframes hueRotate {
+    from { filter: hue-rotate(0deg); }
+    to   { filter: hue-rotate(360deg); }
+}
+
+
+/* ---------------------------------- */
+/* STATE-SPECIFIC STYLES & ANIMS      */
+/* ---------------------------------- */
+
+/* --- LISTENING STATE --- */
+
+@keyframes waveform-listening {
+    0%   { height: 20%; opacity: 0.6; }
+    50%  { height: 100%; opacity: 1; }
+    100% { height: 15%; opacity: 0.7; }
+}
+
+.orb.orb--listening .core-waveform div {
+    /* A more active and faster waveform */
+    animation: waveform-listening 0.5s ease-in-out infinite alternate;
+}
+/* Staggered animation for listening waveform bars */
+.orb.orb--listening .core-waveform div:nth-child(1) { animation-delay: 0s; }
+.orb.orb--listening .core-waveform div:nth-child(2) { animation-delay: 0.1s; }
+.orb.orb--listening .core-waveform div:nth-child(3) { animation-delay: 0.2s; }
+.orb.orb--listening .core-waveform div:nth-child(4) { animation-delay: 0.3s; }
+.orb.orb--listening .core-waveform div:nth-child(5) { animation-delay: 0.4s; }
+
+
+.orb.orb--listening .halo-ripple {
+    /* A faster, more insistent ripple */
+    animation: haloRipple 2.5s ease-out infinite;
+    animation-delay: 0s;
+}
+
+/* --- THINKING STATE --- */
+
+@keyframes thinking-rotation {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.orb.orb--thinking {
+    /* Faster color shifting */
+    animation: idleBreathing 4s ease-in-out infinite, hueRotate 4s linear infinite;
+}
+
+.orb.orb--thinking::before {
+    /* Add a rotation to the inner glow to signify processing */
+    animation: thinking-rotation 2s linear infinite, innerGlowPulse 4s ease-in-out infinite;
+}
+
+.orb.orb--thinking .core-waveform div {
+    /* Make waveform bars calmer, almost hidden, as focus is on the core */
+    animation: waveform 2s ease-in-out infinite alternate;
+    opacity: 0.4;
+}
+
+/* ---------------------------------- */
+/* RESPONSIVENESS                     */
+/* ---------------------------------- */
+
+@media (max-width: 768px) {
+    .orb {
+        width: 30vw;
+        height: 30vw;
+        min-width: 150px;
+        min-height: 150px;
+    }
+
+    .auni-header, .settings-footer {
+        padding: 1.5rem;
+    }
+
+    .auni-header h1 {
+        font-size: 1.2rem;
+    }
+}
