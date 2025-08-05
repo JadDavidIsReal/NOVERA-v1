@@ -1,32 +1,36 @@
-# Auni Visual System Documentation (Living Aurora Design)
+# Auni Visual System Documentation (Executive Flame Design)
 
 ## 1. Overview
 
-This document details the final visual system for the Auni interface. The design philosophy is to portray Auni as an **organic, living entity** encased in a futuristic shell. The visual representation is a **strictly centered, glossy, glass-like orb** that communicates its state through an internal "aurora" and external, Siri-like particles.
+This document details the final visual system for the Auni interface. The design philosophy is to portray Auni as a **sophisticated, professional, and executive tool**. The visual representation is a **strictly centered, 2D, faux-3D orb** that radiates a sense of controlled power. The aesthetic is inspired by luxury car dashboards and high-end hardware, using a muted, high-contrast color palette.
 
 ## 2. File Breakdown
 
--   `index.html`: The HTML has been simplified to support the new design. It contains the orb, an inner `aurora-core` container, and a separate `.particle-field` container for external effects.
--   `css/style.css`: This file builds the visual experience. It uses a palette of dark, subtle blues and other soft colors. It renders the glossy orb, the internal aurora, the heartbeat pulse, and the external particle system.
--   `js/main.js`: This script handles two functions:
-    1.  It dynamically generates the 30 external particles on page load.
-    2.  It manages the state (`IDLE`, `LISTENING`, `THINKING`) via keyboard input and applies state classes to the main container to trigger the appropriate animations in CSS.
+-   `index.html`: A minimal structure containing the orb and placeholders for its core, loading ring, and "heat haze" effect. The visual complexity is achieved through CSS.
+-   `css/style.css`: This file builds the complete visual experience. It uses a dark, desaturated navy/charcoal and crisp white/silver color palette. It renders the glossy orb, the sonar-like ripples, the subtle "heat haze," and all state-specific animations.
+-   `js/main.js`: Handles state management. It listens for keyboard input to apply state classes (`.is-listening`, `.is-speaking`, `.is-loading`) to the orb, triggering the corresponding CSS animations.
 -   `README.md`: General project information.
 -   `documentation.md`: This file.
 
-## 3. Orb Architecture: The Living Aurora
+## 3. Orb Architecture: The Executive Flame
 
-The orb is designed to feel like a living heart protected by a polished, technological shell.
+The orb is designed to feel like a powerful, high-end piece of controlled technology.
 
 ### Core Design
--   **Glossy Glass Sphere**: The orb's surface is created with layered `radial-gradient`s to simulate a dark, reflective glass sphere with a sharp highlight, giving it a tangible, high-end feel.
--   **Northern Lights Core**: The inside of the orb contains several `div`s styled with soft, transparent, multi-colored radial gradients. These layers are animated asynchronously with long durations, creating a constantly shifting, subtle "aurora borealis" effect.
--   **Heartbeat Pulse**: The orb's primary animation is a slow, deep "heartbeat" using `transform: scale`. This gives the entire object a baseline sense of being alive.
--   **Pulsating Radar**: Behind the orb, a series of thin, concentric circles pulse outwards, creating a sonar-like effect that provides a sense of environmental awareness.
--   **Siri-like Particles**: The area around the orb is populated by small, soft particles. Their behavior changes drastically based on Auni's state.
+-   **Glossy Orb**: The orb has a dark, desaturated navy background with a sharp highlight, giving it a polished, faux-3D spherical appearance.
+-   **Sonar Ripples**: A `::after` pseudo-element creates sharp, sonar-like rings that pulse outwards, suggesting constant environmental awareness.
+-   **"Heat Haze" Flame Effect**: A dedicated `div` with heavily blurred and slowly transforming `box-shadow`s creates a subtle, shimmering "heat haze" around the orb, suggesting contained energy or processing power.
+-   **Loading Ring**: A thin ring that is hidden by default and appears only in the loading state.
 
-## 4. State-Specific Animations
+## 4. State-Specific Animations & Controls
 
--   **IDLE**: The orb has its gentle heartbeat and the radar pulses slowly. External particles materialize at the edge of the radar field, glow brightly, and drift inwards towards the orb before fading away, as if being calmly consumed for ambient data.
--   **LISTENING**: The heartbeat is faster and more regular. The radar pulses more quickly. The external particles stop drifting and instead snap into a fixed, glowing geometric constellation around the orb, as if "locked on" to an incoming signal.
--   **THINKING**: The heartbeat becomes very rapid. The internal aurora churns more quickly and the radar pulses erratically. The external particles break formation and enter a fast, tight, chaotic orbit around the orb, representing active processing.
+-   **IDLE**: The default state. The orb "breathes" with a slow, gentle pulse. The sonar ripples and heat haze are calm and subtle.
+-   **LISTENING**:
+    -   **Control**: Hold the `Spacebar`.
+    -   **Behavior**: The sonar ripples become faster and sharper. The heat haze effect intensifies, indicating focused energy.
+-   **SPEAKING**:
+    -   **Control**: Press the `S` key.
+    -   **Behavior**: The orb's inner core pulses with a sharp, rhythmic white light, simulating speech.
+-   **LOADING**:
+    -   **Control**: Press the `L` key.
+    -   **Behavior**: The loading ring appears and spins around the orb's circumference.

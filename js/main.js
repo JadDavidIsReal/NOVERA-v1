@@ -1,56 +1,66 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const orbContainer = document.querySelector('.orb-container');
-    const particleField = document.querySelector('.particle-field');
+    const orb = document.querySelector('.orb');
 
-    if (!orbContainer || !particleField) {
-        console.error('Core elements not found!');
+    if (!orb) {
+        console.error('Orb element not found!');
         return;
     }
 
-    // --- Create Particles ---
-    const particleCount = 30;
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.setProperty('--i', i); // for staggered animations
-        particleField.appendChild(particle);
-    }
-
-    // --- State Management ---
     const AUNI_STATES = {
         IDLE: 'idle',
-        LISTENING: 'listening',
-        THINKING: 'thinking'
+        LISTENING: 'is-listening',
+        SPEAKING: 'is-speaking',
+        LOADING: 'is-loading'
     };
 
+    const stateClasses = Object.values(AUNI_STATES).filter(s => s !== 'idle');
     let currentState = AUNI_STATES.IDLE;
-    const stateClasses = Object.values(AUNI_STATES).map(s => `state--${s}`);
+    let idleTimeout;
 
     function setState(newState) {
-        if (!Object.values(AUNI_STATES).includes(newState)) return;
+        clearTimeout(idleTimeout);
+        orb.classList.remove(...stateClasses);
+
+        if (newState !== AUNI_STATES.IDLE) {
+            orb.classList.add(newState);
+        }
 
         currentState = newState;
-        orbContainer.classList.remove(...stateClasses);
-        orbContainer.classList.add(`state--${newState}`);
         console.log(`Auni state changed to: ${currentState}`);
+
+        // Automatically return to idle after a period of activity
+        if (newState !== AUNI_STATES.IDLE) {
+            idleTimeout = setTimeout(() => setState(AUNI_STATES.IDLE), 4000);
+        }
     }
 
-    orbContainer.classList.add(`state--${AUNI_STATES.IDLE}`);
-
     window.addEventListener('keydown', (e) => {
-        switch (e.key.toLowerCase()) {
-            case 'l':
+        // Use keydown for continuous actions like speaking/listening
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (currentState !== AUNI_STATES.LISTENING) {
                 setState(AUNI_STATES.LISTENING);
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+            setState(AUNI_STATES.IDLE);
+        }
+    });
+
+    // Use single key presses for toggle states
+    window.addEventListener('keypress', (e) => {
+        switch (e.key.toLowerCase()) {
+            case 's':
+                setState(AUNI_STATES.SPEAKING);
                 break;
-            case 't':
-                setState(AUNI_STATES.THINKING);
-                break;
-            case 'i':
-            case 'escape':
-                setState(AUNI_STATES.IDLE);
+            case 'l':
+                setState(AUNI_STATES.LOADING);
                 break;
         }
     });
 
-    console.log("Auni 'Living Aurora' Initialized. Press 'L' (Listen), 'T' (Think), 'I' (Idle).");
+    console.log("Auni 'Executive Flame' Initialized. Hold [Space] to Listen. Press 'S' to Speak, 'L' to Load.");
 });
