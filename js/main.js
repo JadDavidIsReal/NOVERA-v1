@@ -21,20 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentState = newState;
-
-        // Remove all possible state classes
         orb.classList.remove(...stateClasses);
-
-        // Add the new state class
         orb.classList.add(`orb--${newState}`);
-
         console.log(`Auni state changed to: ${currentState}`);
     }
 
-    // Set initial state
-    setState(AUNI_STATES.IDLE);
+    // Set a default class for idle animations to hook into
+    orb.classList.add(`orb--${AUNI_STATES.IDLE}`);
 
-    // Add keyboard listeners for state changes
     window.addEventListener('keydown', (e) => {
         switch (e.key.toLowerCase()) {
             case 'l':

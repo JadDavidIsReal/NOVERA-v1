@@ -1,4 +1,4 @@
-/* Auni - Visual Interface - Sentient Redesign */
+/* Auni - Visual Interface - Futuristic Tech Redesign */
 
 /* ---------------------------------- */
 /* GENERAL & LAYOUT                   */
@@ -7,12 +7,11 @@
 :root {
     --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
     --text-color: #f0f0f0;
-    /* Final "Sentient" Palette */
-    --aura-color-1: rgba(180, 220, 255, 0.05);
-    --aura-color-2: rgba(200, 230, 255, 0.08);
-    --particle-color: rgba(230, 245, 255, 0.9);
-    --tendril-color: rgba(200, 230, 255, 0.5);
-    --glow-color: rgba(180, 220, 255, 0.7);
+    /* New "Technology Blue" Palette */
+    --tech-blue: #00BFFF; /* DeepSkyBlue */
+    --tech-glow: rgba(0, 191, 255, 0.7);
+    --dark-blue: #00008B; /* DarkBlue */
+    --orb-bg: #020024;
 }
 
 html, body {
@@ -29,7 +28,6 @@ body {
     align-items: center;
 }
 
-/* Header & Footer are positioned above the 3D context */
 .auni-header, .settings-footer {
     position: absolute;
     padding: 2.5rem;
@@ -41,188 +39,147 @@ body {
 .settings-icon { width: 24px; height: 18px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; transition: opacity 0.3s ease; }
 .settings-icon span { display: block; width: 100%; height: 2px; background-color: var(--text-color); opacity: 0.7; transition: all 0.3s ease; }
 .settings-icon:hover { opacity: 1; }
-.settings-icon:hover span { background-color: #fff; }
+.settings-icon:hover span { background-color: var(--tech-blue); }
 
 
 /* ---------------------------------- */
-/* ORB - SENTIENT REDESIGN            */
+/* ORB - FUTURISTIC REDESIGN          */
 /* ---------------------------------- */
 
 .orb-container {
-    perspective: 1000px;
+    perspective: 800px;
 }
 
 .orb {
     width: 20vw;
     height: 20vw;
-    min-width: 250px;
-    min-height: 250px;
+    min-width: 300px;
+    min-height: 300px;
     position: relative;
+    border-radius: 50%;
+    background: radial-gradient(circle at 65% 35%, var(--dark-blue), var(--orb-bg) 60%);
+    box-shadow: 0 0 50px -10px var(--tech-glow);
     transform-style: preserve-3d;
-    animation: slow-pan 35s ease-in-out infinite alternate;
 }
 
-/* The Aura */
-.aura {
+/* Glossy highlight effect */
+.orb-gloss {
+    position: absolute;
+    top: 10%; left: 20%;
+    width: 60%; height: 30%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
+    transform: rotate(-30deg);
+    opacity: 0.8;
+}
+
+/* Central glowing core */
+.orb-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 10px; height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 15px 5px var(--tech-glow);
+    animation: core-pulse 4s ease-in-out infinite;
+}
+
+/* Concentric rings of data glyphs */
+.glyph-ring {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    transform-style: preserve-3d;
-}
-
-.aura-layer {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 100%; height: 100%;
     border-radius: 50%;
-    box-shadow: inset 0 0 80px 20px var(--aura-color-1), inset 0 0 120px 40px var(--aura-color-2);
-    animation: shimmer 12s ease-in-out infinite alternate;
-}
-.aura-layer:nth-child(2) {
-    animation-name: shimmer-2;
-    animation-duration: 15s;
-    transform: rotateY(60deg) rotateX(20deg);
-}
-.aura-layer:nth-child(3) {
-    animation-name: shimmer-3;
-    animation-duration: 18s;
-    transform: rotateY(-60deg) rotateX(-20deg);
-}
-
-
-/* The 3D Core */
-.particle-system {
-    position: absolute;
-    width: 100%; height: 100%;
     transform-style: preserve-3d;
-    animation: core-3d-rotation 40s linear infinite;
+    animation: rotate-ring 20s linear infinite;
 }
+.glyph-ring--mid { animation-duration: 30s; animation-direction: reverse; }
+.glyph-ring--inner { animation-duration: 40s; }
 
-/* Particles */
-.particle-system span {
+/* Individual glyphs */
+.glyph {
     position: absolute;
     top: 50%; left: 50%;
-    width: 3px; height: 3px;
-    background: var(--particle-color);
+    width: 4px; height: 4px;
+    margin: -2px 0 0 -2px;
+    background: var(--tech-blue);
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--particle-color);
-    opacity: 0.8;
-    animation: drift-3d 8s ease-in-out infinite alternate;
+    opacity: 0.7;
 }
 
-/* Thought Tendrils */
-.tendril {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 1px;
-    height: 80px; /* Length of tendril */
-    background: linear-gradient(to bottom, transparent, var(--tendril-color), transparent);
-    opacity: 0;
-    transform-origin: top;
-}
+/* Distribute glyphs around their rings */
+.glyph-ring--outer .glyph:nth-child(1) { transform: rotateY(0deg) translateZ(150px); }
+.glyph-ring--outer .glyph:nth-child(2) { transform: rotateY(40deg) translateZ(150px); }
+/* ... more glyphs for outer ring ... */
+.glyph-ring--outer .glyph:nth-child(9) { transform: rotateY(320deg) translateZ(150px); }
+
+.glyph-ring--mid .glyph { width: 2px; height: 10px; border-radius: 0;}
+.glyph-ring--mid .glyph:nth-child(1) { transform: rotateY(0deg) translateZ(110px) rotateX(90deg); }
+.glyph-ring--mid .glyph:nth-child(2) { transform: rotateY(72deg) translateZ(110px) rotateX(90deg); }
+/* ... more glyphs for mid ring ... */
+.glyph-ring--mid .glyph:nth-child(5) { transform: rotateY(288deg) translateZ(110px) rotateX(90deg); }
+
+.glyph-ring--inner .glyph:nth-child(1) { transform: rotateX(0deg) translateZ(70px); }
+.glyph-ring--inner .glyph:nth-child(2) { transform: rotateX(120deg) translateZ(70px); }
+.glyph-ring--inner .glyph:nth-child(3) { transform: rotateX(240deg) translateZ(70px); }
+
 
 /* ---------------------------------- */
-/* SENTIENT KEYFRAMES                 */
+/* BASE KEYFRAMES (IDLE)              */
 /* ---------------------------------- */
 
-@keyframes slow-pan {
-    from { transform: rotateY(-15deg) rotateX(5deg); }
-    to   { transform: rotateY(15deg) rotateX(-5deg); }
+@keyframes rotate-ring {
+    from { transform: rotateY(0deg) rotateX(10deg); }
+    to   { transform: rotateY(360deg) rotateX(10deg); }
 }
 
-@keyframes core-3d-rotation {
-    from { transform: rotate3d(1, 1, 1, 0deg); }
-    to   { transform: rotate3d(1, 1, 1, 360deg); }
+@keyframes core-pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 15px 5px var(--tech-glow); }
+    50% { transform: scale(1.2); box-shadow: 0 0 25px 10px var(--tech-glow); }
 }
 
-@keyframes shimmer {
-    from { opacity: 0.8; filter: blur(5px); transform: scale(1); }
-    to   { opacity: 0.6; filter: blur(10px); transform: scale(1.05); }
-}
-@keyframes shimmer-2 {
-    from { opacity: 0.5; filter: blur(10px); }
-    to   { opacity: 0.8; filter: blur(5px); }
-}
-@keyframes shimmer-3 {
-    from { opacity: 0.7; transform: rotateY(-60deg) rotateX(-20deg) scale(1.05); }
-    to   { opacity: 0.5; transform: rotateY(-50deg) rotateX(-15deg) scale(1); }
+@keyframes scan-line {
+    from { transform: translateY(-100%) scaleY(2); opacity: 0; }
+    to   { transform: translateY(100%) scaleY(1); opacity: 0.5; }
 }
 
-@keyframes drift-3d {
-    from { transform: translate3d(var(--x-start), var(--y-start), var(--z-start)) scale(1); }
-    to   { transform: translate3d(var(--x-end), var(--y-end), var(--z-end)) scale(0.8); }
+@keyframes glyph-flash {
+    0%, 100% { background: var(--tech-blue); }
+    50% { background: #fff; }
 }
-
-@keyframes spark-tendril {
-    0%, 100% { opacity: 0; transform: var(--transform-start) scaleY(0); }
-    20% { opacity: 1; transform: var(--transform-start) scaleY(1); }
-    80% { opacity: 1; transform: var(--transform-end) scaleY(1); }
-    99% { opacity: 0; transform: var(--transform-end) scaleY(0); }
-}
-
-/* Assigning 3D positions to particles */
-.particle-system span:nth-child(1) { --x-start: 0; --y-start: 0; --z-start: 80px; --x-end: 10px; --y-end: 20px; --z-end: 60px; animation-delay: -1s;}
-.particle-system span:nth-child(2) { --x-start: 50px; --y-start: 50px; --z-start: 50px; --x-end: 40px; --y-end: 60px; --z-end: 30px; animation-delay: -2s;}
-.particle-system span:nth-child(3) { --x-start: -60px; --y-start: 30px; --z-start: -40px; --x-end: -50px; --y-end: 20px; --z-end: -60px; animation-delay: -3s;}
-/* ... add more for all particles ... */
-.particle-system span:nth-child(10) { --x-start: 20px; --y-start: -70px; --z-start: 10px; --x-end: 30px; --y-end: -50px; --z-end: -10px; animation-delay: -10s;}
-
 
 /* ---------------------------------- */
 /* STATE-SPECIFIC ANIMATIONS          */
 /* ---------------------------------- */
 
-@keyframes focus-aura {
-    from { transform: scale(1); opacity: 0.8; }
-    to   { transform: scale(0.95); opacity: 1; }
+/* LISTENING STATE */
+.orb.orb--listening .glyph-ring {
+    animation-play-state: paused; /* Stop rings from rotating */
+}
+.orb.orb--listening .orb-core {
+    animation-duration: 1s; /* Faster core pulse */
+}
+.orb.orb--listening::after { /* Add a scan-line effect */
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--tech-glow), transparent);
+    animation: scan-line 2s ease-out infinite;
 }
 
-@keyframes thinking-rotation {
-    from { transform: rotate3d(1, 1, 1, 0deg); }
-    to   { transform: rotate3d(3, -2, -1, 360deg); } /* More erratic rotation path */
+/* THINKING STATE */
+.orb.orb--thinking .glyph-ring {
+    animation-duration: 5s; /* Faster rotation */
 }
-
-/* IDLE STATE: Return to base animations */
-.orb.orb--idle {
-    animation: slow-pan 35s ease-in-out infinite alternate;
+.orb.orb--thinking .glyph {
+    animation: glyph-flash 0.5s linear infinite;
+    animation-delay: calc(var(--i, 1) * 0.1s); /* Stagger flash with --i custom property */
 }
-.orb.orb--idle .aura-layer {
-    animation-name: shimmer; /* Ensure it's not focus-aura */
+.orb.orb--thinking .orb-core {
+    animation-duration: 0.5s; /* Very fast pulse */
 }
-
-/* LISTENING STATE: Focused and attentive */
-.orb.orb--listening {
-    animation: none; /* Pause the slow-pan to show focus */
-}
-.orb.orb--listening .aura-layer {
-    animation: focus-aura 4s ease-in-out infinite alternate;
-}
-.orb.orb--listening .particle-system {
-    animation-duration: 60s; /* Slower, more deliberate rotation */
-}
-.orb.orb--listening .particle-system span {
-    animation-duration: 5s; /* Slower, more observant drift */
-    box-shadow: 0 0 15px #fff; /* Brighter particles */
-}
-
-/* THINKING STATE: Agitated and processing */
-.orb.orb--thinking {
-    animation: slow-pan 10s ease-in-out infinite alternate; /* More agitated pan */
-}
-.orb.orb--thinking .aura-layer {
-    animation-duration: 1s; /* Agitated shimmer */
-}
-.orb.orb--thinking .particle-system {
-    animation-name: thinking-rotation;
-    animation-duration: 6s; /* Fast, erratic rotation */
-}
-.orb.orb--thinking .tendril {
-    animation: spark-tendril 1.2s ease-out infinite;
-    animation-delay: calc(var(--i) * 0.3s); /* Stagger tendril sparks */
-}
-.orb.orb--thinking .tendril:nth-child(1) { --i: 1; --transform-start: rotateY(45deg) rotateX(30deg); --transform-end: rotateY(90deg) rotateX(10deg); }
-.orb.orb--thinking .tendril:nth-child(2) { --i: 2; --transform-start: rotateY(-60deg) rotateX(-20deg); --transform-end: rotateY(-120deg) rotateX(-40deg); }
-.orb.orb--thinking .tendril:nth-child(3) { --i: 3; --transform-start: rotateY(150deg) rotateX(60deg); --transform-end: rotateY(20deg) rotateX(80deg); }
 
 
 /* ---------------------------------- */
@@ -230,7 +187,7 @@ body {
 /* ---------------------------------- */
 
 @media (max-width: 768px) {
-    .orb { width: 40vw; height: 40vw; min-width: 200px; min-height: 200px; }
+    .orb { width: 45vw; height: 45vw; min-width: 250px; min-height: 250px; }
     .auni-header, .settings-footer { padding: 1.5rem; }
     .auni-header h1 { font-size: 1.2rem; }
 }
