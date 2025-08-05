@@ -1,47 +1,37 @@
-# Auni Visual System Documentation
+# Auni Visual System Documentation (Redesign)
 
 ## 1. Overview
 
-This document details the visual system of Auni's interface. The project establishes the core visual identity of Auni through layered animations, a minimalist layout, and state-based interactivity. The focus is on creating a premium, "alive" aesthetic that responds to user input.
+This document details the visual system of Auni's interface, following a major redesign. The new design philosophy shifts away from a clean, colorful aesthetic to one that is more **abstract, subtle, and enigmatic**. The goal is to portray Auni not as a simple digital assistant, but as a mysterious and complex foreign intelligence.
 
 ## 2. File Breakdown
 
--   `index.html`: Contains the structural markup for the interface. It defines the layout containers and the nested `div`s for the central orb.
--   `css/style.css`: The heart of the visual presentation. This file includes all styling, responsive design, CSS keyframe animations, and state-specific visual rules.
--   `js/main.js`: Handles interactivity and state management. It listens for keyboard input and modifies the CSS classes on the orb element to change its visual state.
--   `README.md`: General project information, features, and instructions.
+-   `index.html`: Contains the structural markup. The orb's structure was updated to use a `.particle-system` containing 15 `<span>` elements and two `.halo-ripple` elements to facilitate a more complex visual.
+-   `css/style.css`: Completely overhauled to implement the new design. It features a desaturated color palette and new animations focused on chaotic, asymmetrical, and organic movement.
+-   `js/main.js`: Handles interactivity and state management (functionally unchanged from the previous version).
+-   `README.md`: General project information.
 -   `documentation.md`: This file.
 
 ## 3. Interactivity & State Management
 
-Auni's visual state is controlled by a simple state machine in `js/main.js`.
+The state machine and keyboard controls remain the same:
+-   **States**: `IDLE`, `LISTENING`, `THINKING`.
+-   **Keyboard Controls**: `L` (Listen), `T` (Think), `I`/`Escape` (Idle).
 
-### States
--   **IDLE**: The default, resting state. The orb has a slow, gentle "breathing" animation.
--   **LISTENING**: Activated by the user. The orb's animations become more active and attentive.
--   **THINKING**: Represents processing. The orb's core appears to be working, and colors shift more rapidly.
+## 4. Orb Architecture (Redesign)
 
-### Keyboard Controls
--   `L` key: Switches to the **LISTENING** state.
--   `T` key: Switches to the **THINKING** state.
--   `I` key or `Escape` key: Returns to the **IDLE** state.
+The orb's appearance is now fundamentally more complex and abstract.
 
-### JS to CSS Bridge
-The JavaScript `setState` function removes all state-specific classes from the `.orb` element and adds the one corresponding to the new state (e.g., `.orb--listening`). CSS then uses these classes to apply the correct animations.
+### Core Design Philosophy
+-   **Color Palette**: The vibrant gradient has been replaced with a desaturated, monochromatic palette using faint, electric blues and shades of white (`--primary-glow: rgba(190, 225, 255, 0.7)`). This creates a more subtle and mysterious feel.
+-   **Abstract Core**: The orderly waveform is gone. In its place, a `.particle-system` of 15 `<span>` elements is used. These are styled and animated with staggered delays to create a chaotic, swirling nebula of particles within the orb.
+-   **Asymmetrical Ripples**: Two `.halo-ripple` elements with offset and differing animations create unpredictable, overlapping waves, breaking the perfect symmetry of the previous design.
+-   **Organic Animation**: The base `organic-breathing` keyframe uses a combination of `scale` and `rotate` to make the orb feel like it's subtly warping and less like a perfect, machine-like sphere.
 
-## 4. Orb Architecture
-
-The orb is a composite of HTML elements and CSS pseudo-elements, with animations that change based on its current state.
-
-### Base Animations (Idle State)
--   **.orb**: `idleBreathing` (scale pulse) and `hueRotate` (slow color shift).
--   **.orb::before**: `innerGlowPulse` (deep, slow inner pulse).
--   **.halo-ripple**: `haloRipple` (a single, slow radiating ring).
--   **.core-waveform div**: `waveform` (gentle, staggered bar animation).
-
-### State-Specific Animations
--   **.orb.orb--listening**: The waveform bars become more active (`waveform-listening`), and the halo ripple becomes faster and more frequent.
--   **.orb.orb--thinking**: The `hueRotate` animation accelerates. The `::before` pseudo-element gains a `thinking-rotation` animation to signify processing, and the waveform bars become calmer and less prominent.
+### State-Specific Visuals
+-   **IDLE**: The orb engages in the slow `organic-breathing` and the core particles drift gently and fade in and out.
+-   **LISTENING**: The orb's glow pulses more intently (`pulse-glow` animation). The core particle system rotates more slowly and deliberately, and the particles themselves drift faster as if focusing.
+-   **THINKING**: The orb's breathing and glowing become much faster. The core particle system rotates rapidly, and the particles engage in a `swarm-thinking` animation, where they chaotically converge on the center before dispersing, creating a powerful "processing" effect.
 
 ## 5. Next Phase Placeholder
 
