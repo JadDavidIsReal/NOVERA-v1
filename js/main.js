@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Sets up the WebSocket connection to Deepgram for live transcription.
      */
     function setupDeepgramWebSocket() {
-        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?encoding=webm&sample_rate=48000`, ['token', DEEPGRAM_KEY]);
+        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?encoding=webm&token=${DEEPGRAM_KEY}`);
 
         deepgramSocket.onopen = () => {
             console.log('Deepgram WebSocket opened.');
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         transcriptionDisplay.textContent = ''; // Clear display
         setupDeepgramWebSocket();
 
-        mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm;codecs=opus' });
 
         mediaRecorder.addEventListener('dataavailable', event => {
             if (event.data.size > 0 && deepgramSocket.readyState === WebSocket.OPEN) {
