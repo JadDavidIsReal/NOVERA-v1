@@ -1,14 +1,19 @@
 /**
- * Auni - Phase 1B: Interactive State Logic
- * This script handles the mock state transitions for the Auni orb interface.
+ * Auni - Phase 2: Core AI Integration
+ * This script handles the full AI interaction flow, from voice input to AI response.
  */
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- API Keys (Development Only) ---
+    const DEEPGRAM_KEY = "cc186bd29115880294e05418214099ffff5497b8";
+    const TOGETHER_API_KEY = "tgp_v1_r2rYPrNc_5JHCSKwwWJdsCkJh2JoLfTpiiRBsIpDD2g";
 
     // --- DOM Element Selection ---
     const orb = document.querySelector('.orb');
     const subtitle = document.querySelector('.subtitle');
+    const transcriptionDisplay = document.querySelector('.transcription');
 
-    if (!orb || !subtitle) {
+    if (!orb || !subtitle || !transcriptionDisplay) {
         console.error('Essential elements .orb or .subtitle not found!');
         return;
     }
@@ -19,12 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
         LISTENING: { name: 'listening', text: 'Listening...' },
         THINKING: { name: 'thinking', text: 'Processing...' },
         SPEAKING: { name: 'speaking', text: 'Speaking...' },
-        LOADING: { name: 'loading', text: 'Loading...' }
+        ERROR: { name: 'error', text: 'Something went wrong.' }
     };
 
     let currentState = STATES.IDLE;
-    let isKeyHeld = false; // Flag to prevent keydown repeat triggers
+    let isKeyHeld = false;
     let idleTimeout;
+
+    // --- Audio Recording ---
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioStream;
 
     /**
      * Sets the orb's state, updating CSS classes and subtitle text.
@@ -55,18 +65,160 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set a timeout to return to idle for non-continuous states
         if (newState !== STATES.IDLE && newState !== STATES.LISTENING) {
-            idleTimeout = setTimeout(() => setOrbState(STATES.IDLE), 3000);
+            idleTimeout = setTimeout(() => {
+                setOrbState(STATES.IDLE);
+                if (transcriptionDisplay) transcriptionDisplay.textContent = '';
+            }, 5000); // Increased timeout for reading the response
         }
     }
 
-    // --- Event Binding ---
+    /**
+     * Sends a transcript to TogetherAI for a chat completion.
+     * @param {string} transcript - The user's message.
+     * @returns {Promise<string|null>} The AI's response or null on failure.
+     */
+    async function getAIResponse(transcript) {
+        try {
+            const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${TOGETHER_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'deepseek-chat',
+                    messages: [
+                        { role: 'system', content: 'You are Auni, an elegant and efficient AI assistant. Speak clearly and concisely.' },
+                        { role: 'user', content: transcript }
+                    ]
+                })
+            });
 
-    // 1. Spacebar (Press and Hold for Listening)
+            if (!response.ok) {
+                throw new Error(`TogetherAI API error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        } catch (error) {
+            console.error('Error getting AI response:', error);
+            return null;
+        }
+    }
+
+    // --- Audio Processing Logic ---
+
+    /**
+     * Starts audio recording.
+     */
+    async function startRecording() {
+        try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+            audioChunks = [];
+
+            mediaRecorder.addEventListener('dataavailable', event => {
+                audioChunks.push(event.data);
+            });
+
+            mediaRecorder.start();
+            setOrbState(STATES.LISTENING);
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            setOrbState(STATES.ERROR);
+        }
+    }
+
+    /**
+     * Stops audio recording and returns the audio as a Blob.
+     * @returns {Blob} The recorded audio data.
+     */
+    function stopRecording() {
+        return new Promise(resolve => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                resolve(null);
+                return;
+            }
+
+            mediaRecorder.addEventListener('stop', () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                audioStream.getTracks().forEach(track => track.stop()); // Release microphone
+                resolve(audioBlob);
+            });
+
+            mediaRecorder.stop();
+        });
+    }
+
+    /**
+     * Sends audio to Deepgram for transcription.
+     * @param {Blob} audioBlob - The audio data to transcribe.
+     * @returns {Promise<string|null>} The transcript or null on failure.
+     */
+    async function getTranscription(audioBlob) {
+        try {
+            const response = await fetch('https://api.deepgram.com/v1/listen', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Token ${DEEPGRAM_KEY}`,
+                    'Content-Type': 'audio/webm'
+                },
+                body: audioBlob
+            });
+
+            if (!response.ok) {
+                throw new Error(`Deepgram API error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.results.channels[0].alternatives[0].transcript;
+        } catch (error) {
+            console.error('Error getting transcription:', error);
+            return null;
+        }
+    }
+
+    // --- Event Handling ---
+
+    const handleInteractionStart = () => {
+        if (currentState === STATES.IDLE) {
+            startRecording();
+        }
+    };
+
+    const handleInteractionEnd = async () => {
+        if (currentState === STATES.LISTENING) {
+            const audioBlob = await stopRecording();
+            if (!audioBlob || audioBlob.size === 0) {
+                setOrbState(STATES.IDLE);
+                return;
+            }
+
+            setOrbState(STATES.THINKING);
+            const transcript = await getTranscription(audioBlob);
+
+            if (transcript) {
+                if (transcriptionDisplay) transcriptionDisplay.textContent = `"${transcript}"`;
+
+                const aiResponse = await getAIResponse(transcript);
+                if (aiResponse) {
+                    setOrbState(STATES.SPEAKING);
+                    subtitle.textContent = aiResponse;
+                } else {
+                    setOrbState(STATES.ERROR);
+                }
+            } else {
+                setOrbState(STATES.ERROR);
+            }
+        }
+    };
+
+    // 1. Spacebar listeners
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space' && !isKeyHeld) {
             e.preventDefault();
             isKeyHeld = true;
-            setOrbState(STATES.LISTENING);
+            handleInteractionStart();
         }
     });
 
@@ -74,37 +226,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.code === 'Space') {
             e.preventDefault();
             isKeyHeld = false;
-            setOrbState(STATES.IDLE);
+            handleInteractionEnd();
         }
     });
 
-    // 2. Single Key Presses (T, S, L)
-    window.addEventListener('keydown', (e) => {
-        if (isKeyHeld) return; // Ignore if space is already held
-
-        switch (e.key.toLowerCase()) {
-            case 't':
-                setOrbState(STATES.THINKING);
-                break;
-            case 's':
-                setOrbState(STATES.SPEAKING);
-                break;
-            case 'l':
-                setOrbState(STATES.LOADING);
-                break;
+    // 2. Orb click listeners (for mobile)
+    orb.addEventListener('mousedown', () => {
+        if (currentState === STATES.IDLE) {
+            handleInteractionStart();
+        } else if (currentState === STATES.LISTENING) {
+            handleInteractionEnd();
+        }
+    });
+    // Prevent default touch behavior
+    orb.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (currentState === STATES.IDLE) {
+            handleInteractionStart();
+        } else if (currentState === STATES.LISTENING) {
+            handleInteractionEnd();
         }
     });
 
-    // 3. Click on Orb (Toggle Listening)
-    orb.addEventListener('click', () => {
-        if (currentState === STATES.LISTENING) {
-            setOrbState(STATES.IDLE);
-        } else {
-            setOrbState(STATES.LISTENING);
-        }
-    });
 
     // --- Initialization ---
-    console.log("Auni Interactive State Logic Initialized.");
-    console.log("Hold [Space] or Click Orb to Listen. Press T (Think), S (Speak), L (Load).");
+    console.log("Auni AI Logic Initialized.");
+    console.log("Hold [Space] or Click Orb to Speak.");
 });
