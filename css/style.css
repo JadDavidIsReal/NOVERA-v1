@@ -7,11 +7,11 @@
     --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
     --text-color: #e0e0e0;
     /* Executive Palette */
-    --orb-bg-dark: #0a0f1a;
+    --orb-bg-dark: #1018299e;
     --orb-bg-light: #1a2233;
     --glow-color: rgba(220, 225, 240, 0.8); /* Crisp, pale silver */
 
-    --highlight-color: rgba(230, 235, 255, 0.25);
+    --highlight-color: rgba(255, 255, 255, 0);
     --subtitle-color: rgba(220, 225, 240, 0.7);
 
 
