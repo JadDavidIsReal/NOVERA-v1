@@ -114,9 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Sets up the WebSocket connection to Deepgram for live transcription.
      */
     function setupDeepgramWebSocket() {
-        deepgramSocket = new WebSocket(
-          `wss://api.deepgram.com/v1/listen?token=${DEEPGRAM_KEY}`
-        );
+        deepgramSocket = new WebSocket(`wss://api.deepgram.com/v1/listen?encoding=webm&sample_rate=48000&token=${DEEPGRAM_KEY}&voice=aura-athena-en`);
 
         let keepAliveInterval;
 
@@ -131,12 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         deepgramSocket.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const transcript = data.channel.alternatives[0].transcript;
-            if (transcript && data.is_final) {
-                finalTranscript += transcript + ' ';
-            }
-            if (transcript) {
-                transcriptionDisplay.textContent = `"${finalTranscript}${transcript}"`;
+            if (data.channel.alternatives[0].transcript) {
+              if (data.is_final) {
+                finalTranscript += data.channel.alternatives[0].transcript + ' ';
+              }
+              transcriptionDisplay.textContent = finalTranscript + data.channel.alternatives[0].transcript;
             }
         };
 
