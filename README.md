@@ -1,82 +1,79 @@
-#Novera: Voice Assistant Identity & Purpose Documentation#
+# NOVERA
+(formerly Auni)
+**NOVERA** stands for:  
+**N**atural **O**perative **V**irtual **E**ntity for **R**esponsive **A**ssistance
 
-🔹 Name: NOVERA
-Acronym Meaning: Natural Operative Virtual Entity for Responsive Assistance
+Novera is the modular voice identity for this system — a professional, phoneme-optimized assistant designed to interface with voice recognition and generative AI tools through a clean, voice-first interface.
 
+---
 
+## What is Novera?
 
-Overview
-Novera is the identity and core persona assigned to the Modular Voice-Activated Assistant Interface — a browser-based, human-centered assistant designed for seamless, voice-first interaction.
-Rather than being a faceless or generic utility, Novera functions as the user-facing AI interface, embodying the principles of clarity, responsiveness, and adaptive intelligence.
+**Novera** is not a character.  
+She is the **identity layer** of a modular voice-activated assistant interface — designed to support seamless voice interaction, modular AI backends, and professional-grade execution.
 
-Novera is not a character. She is not anthropomorphized. She is an interface — deliberately styled with executive minimalism and functional design, while retaining a personal, natural voice experience.
+Unlike typical assistants, Novera avoids overused tropes, anthropomorphization, or fantasy aesthetics. She is an **interface**: minimal, neutral, efficient.
 
+---
 
+## Purpose
 
-Purpose
-Provide a consistent identity layer for the assistant across UI, voice interactions, and documentation.
+- Serve as the **user-facing voice interface** across modules and platforms
+- Provide a **consistent brand and tone** regardless of backend implementation (e.g. Web Speech, Deepgram, OpenRouter, etc.)
+- Maintain **clarity in pronunciation and recognition** (phoneme-stable name)
+- Reinforce **modularity, professionalism, and ease of use**
 
-Act as a modular voice interface shell that can integrate various AI or voice-processing backends (e.g., Web Speech API, Deepgram, OpenRouter, etc.).
+---
 
-Offer users an intuitive point of engagement: holding spacebar or activating voice triggers results in interacting with “Novera.”
+## 🔧 System Role
 
-Build trust and familiarity without humanization or roleplay — just professional, clear, and intelligent responses.
+| Layer               | Description |
+|--------------------|-------------|
+| **Frontend (UX)**   | Visual/voice identity: orb, animations, transcriptions, labels |
+| **Voice Activation**| User speaks; Novera listens/responds through Web Speech or STT API |
+| **Response Output** | Novera formats and vocalizes AI responses, regardless of the engine |
+| **Modularity**      | Future support for toggling voice tone, backends, and settings |
 
-🧩 Role in the System
-Layer	Description
-Frontend (UX)	Novera is the central name and voice interface displayed visually (e.g., animated orb, transcription display).
-Voice Activation	The assistant listens and responds under the identity of Novera, providing feedback and cues through speech and animation.
-AI Output Handler	Whether the backend is OpenRouter, GPT, or another engine, Novera handles the messaging layer and response formatting.
-Settings & Personalization (Future)	As modularity expands, Novera will optionally support adjustable tone, response format, and context awareness.
+---
 
-🔧 Design Principles
-Modular: Novera is not a hardcoded agent but an interchangeable interface. The underlying engine can change — Novera remains consistent.
+## Design Principles
 
-Minimal: Clean visual language. No excessive animations, chat bubbles, or decorative UI. Designed for distraction-free productivity.
+- **Modular** – AI backend agnostic
+- **Minimal** – No unnecessary UI clutter
+- **Phoneme-Safe** – Optimized for speech input/output systems
+- **Professional** – Direct, executive tone
 
-Phoneme-safe: Chosen for TTS and STT clarity, avoiding mispronunciation and recognition errors.
+---
 
-Professional: The tone is direct, helpful, and respectful of the user's intent — not overly friendly, not robotic.
+## Personality Profile (Minimal by Design)
 
-🔒 Personality Profile (Lightweight)
-Attribute	Value
-Tone	Neutral, professional, and concise
-Gender	Female-leaning voice identity, but functionally unisex and neutral
-Emotion	None simulated; only inferred from user's tone if system supports it
-Memory	Stateless unless tied to user session or backend implementation
-Behavior	Actionable, non-conversational unless context demands it
+| Attribute | Value |
+|----------|-------|
+| Tone     | Neutral and professional |
+| Gender   | Female-leaning voice, but unisex/neutral by function |
+| Emotion  | None simulated by default |
+| Memory   | Stateless unless extended via backend |
+| Behavior | Actionable, context-aware, concise |
 
-🧬 Use Case Summary
-Novera is ideal for:
+---
 
-Personal productivity assistants
+## Why "Novera"?
 
-Browser-based automation tools
+- Original name, not tied to culture, religion, or stereotypes  
+- Phonetically optimized for TTS and STT (e.g. Web Speech API)  
+- Modern, brandable, and tech-aligned  
+- Elegant identity for modular AI systems  
+- Avoids similarity to other AI models (e.g. Alexa, Siri, etc.)
 
-Voice-first UI prototypes
+---
 
-Research and data querying agents
+## 🗂 Example Flow
 
-Developer-focused AI interfaces
-
-Executive dashboards with voice input
-
-📎 Example User Flow (Web Speech API)
-txt
-Copy
-Edit
+```txt
 [User holds spacebar]
-[Orb animates — Listening...]
-User: “What's the weather today?”
-[Transcription: “What's the weather today?”]
-[Novera speaks]: “The forecast shows rain in your area this afternoon.”
-✅ Why Novera?
-Not culturally or linguistically biased
+→ Novera enters “Listening” state
 
-Easy to remember, pronounce, and brand
+User: “Schedule a reminder for 3 PM.”
 
-Sound and design tailored for both technical users and general productivity
-
-Voice-safe and scalable as the system grows
-
-Offers a cohesive identity without falling into sci-fi tropes or over-humanization
+→ Transcription appears: "Schedule a reminder for 3 PM."
+→ Novera responds: "Reminder set for 3 PM."
