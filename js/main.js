@@ -95,14 +95,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Transcript Processing ---
     async function processTranscript(transcript) {
-        setOrbState(STATES.THINKING); // Show 'Processing...' immediately
-        await Promise.resolve(); // Force UI update before fetch
-        const aiResponse = await getAIResponse(transcript);
-        if (aiResponse) {
-            await playAIAudioResponse(aiResponse);
-        } else {
+        setOrbState(STATES.THINKING);
+        try {
+            // Step 1: Get the text response from the AI
+            const aiText = await getAIResponse(transcript);
+            if (!aiText) {
+                throw new Error("Failed to get AI response.");
+            }
+
+            // Step 2: Get the audio for the AI's text response
+            const audioBlob = await fetchAIAudio(aiText);
+            if (!audioBlob) {
+                throw new Error("Failed to fetch AI audio.");
+            }
+
+            // Step 3: Now that we have both, play them
+            playAIAudioResponse(aiText, audioBlob);
+
+        } catch (error) {
+            console.error("Error in processing transcript:", error);
             setOrbState(STATES.ERROR);
-            subtitle.textContent = "Failed to get AI response.";
+            subtitle.textContent = error.message;
         }
     }
 
@@ -290,14 +303,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     /**
-     * Converts text to speech using Deepgram and plays the audio.
-     * @param {string} text - The text to be spoken.
+     * Fetches the AI's spoken response from Deepgram.
+     * @param {string} text - The text to be converted to speech.
+     * @returns {Promise<Blob|null>} A promise that resolves to an audio blob or null.
      */
-    async function playAIAudioResponse(text) {
-        setOrbState(STATES.SPEAKING);
-        subtitle.textContent = text; // Show subtitle immediately
-        subtitle.classList.remove('fade-out'); // Ensure fade-out is reset
-
+    async function fetchAIAudio(text) {
         try {
             const response = await fetch('https://api.deepgram.com/v1/speak?model=aura-athena-en', {
                 method: 'POST',
@@ -311,31 +321,45 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorData = await response.json().catch(() => null);
                 const errorMessage = errorData?.reason || response.statusText;
-                throw new Error(`${errorMessage}`);
+                throw new Error(`Deepgram TTS error: ${errorMessage}`);
             }
-
-            const audioBlob = await response.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-
-            audio.play();
-
-            audio.addEventListener('ended', () => {
-                // Fade out subtitle, then clear after transition
-                subtitle.classList.add('fade-out');
-                setTimeout(() => {
-                    subtitle.textContent = '';
-                    subtitle.classList.remove('fade-out');
-                    setOrbState(STATES.IDLE);
-                    transcriptionDisplay.textContent = '';
-                }, 1500); // Match CSS transition duration
-            });
-
+            return await response.blob();
         } catch (error) {
-            console.error('Error playing AI audio response:', error);
-            setOrbState(STATES.ERROR);
-            subtitle.textContent = `Error: ${error.message}`;
+            console.error('Error fetching AI audio:', error);
+            return null;
         }
+    }
+
+    /**
+     * Plays the AI's response, showing text and playing audio simultaneously.
+     * @param {string} text - The text to display.
+     * @param {Blob} audioBlob - The audio blob to play.
+     */
+    function playAIAudioResponse(text, audioBlob) {
+        setOrbState(STATES.SPEAKING);
+        subtitle.textContent = text;
+        subtitle.classList.remove('fade-out');
+
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+
+        audio.play();
+
+        audio.addEventListener('ended', () => {
+            subtitle.classList.add('fade-out');
+            setTimeout(() => {
+                subtitle.textContent = '';
+                subtitle.classList.remove('fade-out');
+                setOrbState(STATES.IDLE);
+                transcriptionDisplay.textContent = '';
+            }, 1500);
+        });
+
+        audio.addEventListener('error', (e) => {
+            console.error('Error playing audio:', e);
+            setOrbState(STATES.ERROR);
+            subtitle.textContent = "Error playing audio response.";
+        });
     }
 
     const handleInteractionEnd = () => {

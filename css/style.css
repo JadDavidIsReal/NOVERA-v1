@@ -212,16 +212,21 @@ body {
 }
 
 /* THINKING */
-.orb--thinking {
-    animation: swirl 2s linear infinite;
+.orb--thinking .loading-ring {
+    opacity: 1;
+    animation: loading-spin 1.5s linear infinite;
 }
 
 /* SPEAKING */
-.orb--speaking .orb-core {
-    animation: speak-pulse 0.4s ease-in-out infinite;
+.orb--speaking {
+    animation: breathe 1s ease-in-out infinite; /* Faster, more intense pulse */
 }
 
-/* LOADING */
+.orb--speaking .orb-core {
+    animation: speak-pulse 0.5s ease-in-out infinite;
+}
+
+/* LOADING (retained for other potential uses) */
 .orb--loading .loading-ring {
     opacity: 1;
     animation: loading-spin 1s linear infinite;
