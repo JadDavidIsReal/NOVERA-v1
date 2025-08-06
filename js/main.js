@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let recognition;
     let interimTranscript = '';
     let isRecognitionRunning = false;
+    let pendingTranscript = null;
 
     function setupSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -82,11 +83,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recognition.onend = () => {
             isRecognitionRunning = false;
-            // Optionally restart or handle end of speech
+            // If we have a pending transcript, process it now
+            if (pendingTranscript !== null) {
+                processTranscript(pendingTranscript);
+                pendingTranscript = null;
+            }
         };
     }
 
     setupSpeechRecognition();
+
+    // --- Transcript Processing ---
+    async function processTranscript(transcript) {
+        setOrbState(STATES.THINKING); // Show 'Processing...' immediately
+        await Promise.resolve(); // Force UI update before fetch
+        const aiResponse = await getAIResponse(transcript);
+        if (aiResponse) {
+            await playAIAudioResponse(aiResponse);
+        } else {
+            setOrbState(STATES.ERROR);
+            subtitle.textContent = "Failed to get AI response.";
+        }
+    }
 
     /**
      * Sets the orb's state, updating CSS classes and subtitle text.
@@ -277,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function playAIAudioResponse(text) {
         setOrbState(STATES.SPEAKING);
+        subtitle.textContent = text; // Show subtitle immediately
         subtitle.classList.remove('fade-out'); // Ensure fade-out is reset
 
         try {
@@ -298,10 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
-
-            audio.addEventListener('play', () => {
-                subtitle.textContent = text; // Show subtitle exactly when audio starts
-            });
 
             audio.play();
 
@@ -328,26 +343,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Stop browser STT
             if (recognition && isRecognitionRunning) {
                 recognition.stop();
+                // Wait for onend to process transcript
+                pendingTranscript = finalTranscript.trim();
             } else {
                 stopRecording();
-            }
-
-            // Use a short timeout to allow the final transcript to be processed
-            setTimeout(async () => {
-                const transcript = finalTranscript.trim();
-                if (transcript) {
-                    setOrbState(STATES.THINKING);
-                    const aiResponse = await getAIResponse(transcript);
-                    if (aiResponse) {
-                        await playAIAudioResponse(aiResponse);
+                // Use a short timeout to allow the final transcript to be processed
+                setTimeout(async () => {
+                    const transcript = finalTranscript.trim();
+                    if (transcript) {
+                        await processTranscript(transcript);
                     } else {
-                        setOrbState(STATES.ERROR);
-                        subtitle.textContent = "Failed to get AI response.";
+                        setOrbState(STATES.IDLE);
                     }
-                } else {
-                    setOrbState(STATES.IDLE);
-                }
-            }, 500);
+                }, 500);
+            }
         }
     };
 
