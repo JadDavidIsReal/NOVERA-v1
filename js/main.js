@@ -263,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function playAIAudioResponse(text) {
         setOrbState(STATES.SPEAKING);
-        subtitle.textContent = text; // Show the AI's response text immediately
         subtitle.classList.remove('fade-out'); // Ensure fade-out is reset
 
         try {
@@ -285,6 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioBlob = await response.blob();
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
+
+            audio.addEventListener('play', () => {
+                subtitle.textContent = text; // Show subtitle exactly when audio starts
+            });
 
             audio.play();
 
