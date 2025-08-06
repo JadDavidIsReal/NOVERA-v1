@@ -146,12 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
         currentState = newState;
         console.log(`Auni state set to: ${currentState.name}`);
 
-        // Only set idle timer after SPEAKING state
+        // Only set idle timer after SPEAKING or ERROR state
         if (newState === STATES.SPEAKING) {
             idleTimeout = setTimeout(() => {
                 setOrbState(STATES.IDLE);
                 if (transcriptionDisplay) transcriptionDisplay.textContent = '';
             }, 5000); // or your preferred timeout after speaking
+        } else if (newState === STATES.ERROR) {
+            idleTimeout = setTimeout(() => {
+                setOrbState(STATES.IDLE);
+                if (transcriptionDisplay) transcriptionDisplay.textContent = '';
+            }, 5000); // or your preferred timeout after error
         }
     }
 
