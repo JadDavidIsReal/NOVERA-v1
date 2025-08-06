@@ -25,7 +25,7 @@ Unlike typical assistants, Novera avoids overused tropes, anthropomorphization, 
 
 ---
 
-## 🔧 System Role
+## System Role
 
 | Layer               | Description |
 |--------------------|-------------|
