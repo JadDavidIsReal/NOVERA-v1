@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Web Speech API Integration (STT) ---
     let recognition;
     let interimTranscript = '';
+    let isRecognitionRunning = false;
 
     function setupSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.lang = 'en-US';
 
         recognition.onstart = () => {
+            isRecognitionRunning = true;
             interimTranscript = '';
             transcriptionDisplay.textContent = '';
             setOrbState(STATES.LISTENING);
@@ -72,12 +74,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         recognition.onerror = (event) => {
+            isRecognitionRunning = false;
             console.error('SpeechRecognition error:', event.error);
             setOrbState(STATES.ERROR);
             subtitle.textContent = 'Speech recognition error.';
         };
 
         recognition.onend = () => {
+            isRecognitionRunning = false;
             // Optionally restart or handle end of speech
         };
     }
@@ -143,7 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error(`TogetherAI API error: ${response.statusText}`);
+                let errorDetails = `Status: ${response.status} ${response.statusText}`;
+                let errorBody = '';
+                try {
+                    errorBody = await response.text();
+                } catch (e) {
+                    errorBody = '(Could not read error body)';
+                }
+                throw new Error(`TogetherAI API error: ${errorDetails}\nBody: ${errorBody}`);
             }
 
             const data = await response.json();
@@ -250,6 +261,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Start browser STT
             if (recognition) {
                 finalTranscript = '';
+                if (isRecognitionRunning) {
+                    recognition.stop();
+                }
                 recognition.start();
             } else {
                 startRecording(); // fallback to Deepgram only
@@ -312,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleInteractionEnd = () => {
         if (currentState === STATES.LISTENING) {
             // Stop browser STT
-            if (recognition && recognition.stop) {
+            if (recognition && isRecognitionRunning) {
                 recognition.stop();
             } else {
                 stopRecording();
