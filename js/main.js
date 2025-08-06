@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- API Keys (Development Only) ---
-    const DEEPGRAM_KEY = "e019ba41b5ac347788faffaae7b97747d7cef74b";
+    const DEEPGRAM_KEY = "72bdc80654e54efc8b97dbf7f5cf8707ee1baef4";
     const TOGETHER_API_KEY = "tgp_v1_r2rYPrNc_5JHCSKwwWJdsCkJh2JoLfTpiiRBsIpDD2g";
 
     // --- DOM Element Selection ---
@@ -36,6 +36,53 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioStream;
     let deepgramSocket;
     let finalTranscript = '';
+
+    // --- Web Speech API Integration (STT) ---
+    let recognition;
+    let interimTranscript = '';
+
+    function setupSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn('Web Speech API is not supported in this browser.');
+            return;
+        }
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            interimTranscript = '';
+            transcriptionDisplay.textContent = '';
+            setOrbState(STATES.LISTENING);
+        };
+
+        recognition.onresult = (event) => {
+            interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + ' ';
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            transcriptionDisplay.textContent = finalTranscript + interimTranscript;
+        };
+
+        recognition.onerror = (event) => {
+            console.error('SpeechRecognition error:', event.error);
+            setOrbState(STATES.ERROR);
+            subtitle.textContent = 'Speech recognition error.';
+        };
+
+        recognition.onend = () => {
+            // Optionally restart or handle end of speech
+        };
+    }
+
+    setupSpeechRecognition();
 
     /**
      * Sets the orb's state, updating CSS classes and subtitle text.
@@ -140,12 +187,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        deepgramSocket.onerror = (error) => {
-            console.error('Deepgram WebSocket error:', error);
+        deepgramSocket.onerror = (event) => {
+            console.error('Deepgram WebSocket error:', event);
+            console.log('Error type:', event.type);
+            console.log('WebSocket readyState:', deepgramSocket.readyState);
+            if (deepgramSocket && deepgramSocket.readyState === WebSocket.CLOSED) {
+                console.log('WebSocket closed immediately after error.');
+            }
         };
 
-        deepgramSocket.onclose = () => {
+        deepgramSocket.onclose = (event) => {
             console.log('Deepgram WebSocket closed.');
+            console.log('Close code:', event.code);
+            console.log('Close reason:', event.reason);
             clearInterval(keepAliveInterval);
         };
     }
@@ -193,7 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleInteractionStart = () => {
         if (currentState === STATES.IDLE) {
-            startRecording();
+            // Start browser STT
+            if (recognition) {
+                finalTranscript = '';
+                recognition.start();
+            } else {
+                startRecording(); // fallback to Deepgram only
+            }
         }
     };
 
@@ -204,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function playAIAudioResponse(text) {
         setOrbState(STATES.SPEAKING);
         subtitle.textContent = text; // Show the AI's response text immediately
+        subtitle.classList.remove('fade-out'); // Ensure fade-out is reset
 
         try {
             const response = await fetch('https://api.deepgram.com/v1/speak?model=aura-athena-en', {
@@ -228,8 +289,14 @@ document.addEventListener('DOMContentLoaded', () => {
             audio.play();
 
             audio.addEventListener('ended', () => {
-                setOrbState(STATES.IDLE);
-                transcriptionDisplay.textContent = '';
+                // Fade out subtitle, then clear after transition
+                subtitle.classList.add('fade-out');
+                setTimeout(() => {
+                    subtitle.textContent = '';
+                    subtitle.classList.remove('fade-out');
+                    setOrbState(STATES.IDLE);
+                    transcriptionDisplay.textContent = '';
+                }, 1500); // Match CSS transition duration
             });
 
         } catch (error) {
@@ -241,16 +308,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleInteractionEnd = () => {
         if (currentState === STATES.LISTENING) {
-            stopRecording();
+            // Stop browser STT
+            if (recognition && recognition.stop) {
+                recognition.stop();
+            } else {
+                stopRecording();
+            }
 
-            // Use a short timeout to allow the final transcript to be processed by the WebSocket
+            // Use a short timeout to allow the final transcript to be processed
             setTimeout(async () => {
                 const transcript = finalTranscript.trim();
                 if (transcript) {
                     setOrbState(STATES.THINKING);
-
                     const aiResponse = await getAIResponse(transcript);
-
                     if (aiResponse) {
                         await playAIAudioResponse(aiResponse);
                     } else {
@@ -260,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     setOrbState(STATES.IDLE);
                 }
-            }, 500); // 500ms delay to wait for final transcript
+            }, 500);
         }
     };
 

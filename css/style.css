@@ -240,3 +240,8 @@ body {
         cursor: default;
     }
 }
+
+.subtitle.fade-out {
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
