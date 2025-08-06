@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
                     messages: [
-                        { role: 'system', content: 'You are Auni, an elegant and efficient AI assistant. Speak clearly and concisely.' },
+                        { role: 'system', content: 'You are Auni, an elegant and efficient AI assistant. Speak clearly and concisely. Less and direct is always better.' },
                         { role: 'user', content: transcript }
                     ]
                 })
