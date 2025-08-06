@@ -1,5 +1,5 @@
 /* ----------------------------------------
-   Auni - Visual Interface (Phase 1-A.2)
+   Novera - Visual Interface (Phase 1-A.2)
    ---------------------------------------- */
 
 /* --- General Setup --- */
@@ -16,7 +16,7 @@ html, body {
 }
 
 /* --- Layout Containers --- */
-.auni-header {
+.novera-header {
     position: absolute;
     top: 2rem;
     left: 2rem;
@@ -39,7 +39,7 @@ html, body {
 }
 
 /* --- UI Elements --- */
-.auni-header h1 {
+.novera-header h1 {
     font-size: 1.4rem;
     font-weight: 300;
     letter-spacing: 0.05em;
@@ -116,12 +116,12 @@ html, body {
         height: 30vw;
     }
 
-    .auni-header {
+    .novera-header {
         top: 1.5rem;
         left: 1.5rem;
     }
 
-    .auni-header h1 {
+    .novera-header h1 {
         font-size: 1.2rem;
     }
 

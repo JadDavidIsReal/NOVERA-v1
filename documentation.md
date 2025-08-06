@@ -1,8 +1,8 @@
-# Auni AI System Documentation (Phase 2 Enhancements)
+# Novera AI System Documentation (Phase 2 Enhancements)
 
 ## 1. Overview
 
-This document details the enhanced AI-powered interactive system for the Auni interface. This version introduces significant improvements to user experience and performance, including live transcription via WebSockets and optimized microphone handling.
+This document details the enhanced AI-powered interactive system for the Novera interface. This version introduces significant improvements to user experience and performance, including live transcription via WebSockets and optimized microphone handling.
 
 ## 2. File Breakdown
 

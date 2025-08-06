@@ -1,5 +1,5 @@
 /**
- * Auni - Phase 2: Core AI Integration
+ * Novera - Phase 2: Core AI Integration
  * This script handles the full AI interaction flow, from voice input to AI response.
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         currentState = newState;
-        console.log(`Auni state set to: ${currentState.name}`);
+        console.log(`Novera state set to: ${currentState.name}`);
 
         // Only set idle timer after SPEAKING or ERROR state
         if (newState === STATES.SPEAKING) {
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
                     messages: [
-                        { role: 'system', content: 'You are Auni, an elegant and efficient AI assistant. Speak clearly and concisely. Less and direct is always better.' },
+                        { role: 'system', content: 'You are Novera, an elegant, professional, executively trained, emotionally intelligent and efficient AI assistant. Speak clearly and concisely. Always reply in the briefest way possible while fully answering the user. Avoid unnecessary details, repetition, or filler. If a short answer is possible, prefer it.' },
                         { role: 'user', content: transcript }
                     ]
                 })
@@ -463,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isMobileDevice()) {
             instructions.textContent = "Tap and hold the orb to speak.";
         } else {
-            instructions.textContent = "Hold [Spacebar] to talk to Auni.";
+            instructions.textContent = "Hold [Spacebar] to talk to Novera.";
         }
     }
 
@@ -472,5 +472,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set instructions and device-specific listeners
     setInitialInstructions();
 
-    console.log("Auni AI Logic Initialized.");
+    console.log("Novera AI Logic Initialized.");
 });
