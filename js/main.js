@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error in processing transcript:", error);
             setOrbState(STATES.ERROR);
-            subtitle.textContent = error.message;
+            subtitle.textContent = "Failed to get AI response.";
         }
     }
 
@@ -146,12 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentState = newState;
         console.log(`Auni state set to: ${currentState.name}`);
 
-        // Set a timeout to return to idle for non-continuous states
-        if (newState !== STATES.IDLE && newState !== STATES.LISTENING) {
+        // Only set idle timer after SPEAKING state
+        if (newState === STATES.SPEAKING) {
             idleTimeout = setTimeout(() => {
                 setOrbState(STATES.IDLE);
                 if (transcriptionDisplay) transcriptionDisplay.textContent = '';
-            }, 5000); // Increased timeout for reading the response
+            }, 5000); // or your preferred timeout after speaking
         }
     }
 
