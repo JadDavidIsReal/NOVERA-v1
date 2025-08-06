@@ -1,4 +1,5 @@
-#Novera: Voice Assistant Identity & Purpose Documentation
+#Novera: Voice Assistant Identity & Purpose Documentation#
+
 🔹 Name: NOVERA
 Acronym Meaning: Natural Operative Virtual Entity for Responsive Assistance
 
