@@ -1,19 +1,23 @@
 /**
  * Novera - Final Core
  * Powered by Groq (llama-3.1-8b-instant)
- * Features: Session memory, function calling, web search, optimized timing
- * Pure static. No frameworks. Runs on GitHub Pages.
+ * Key obfuscated via split (3 parts)
+ * No CORS. No Proxy. No Bullshit.
  */
 
-// --- Obfuscated Groq Key ---
+// --- Obfuscated Groq Key (Split into 3) ---
 const k1 = 'gsk_v3Q4dF2yjuSNa0eMrgxd';
 const k2 = 'WGdyb3FYjsCZbeVmijMHkQUP';
 const k3 = 'wt62zv2A';
 const GROQ_KEY = `${k1}${k2}${k3}`;
 
 const CONFIG = {
+  API_KEYS: {
+    DEEPGRAM: "72bdc80654e54efc8b97dbf7f5cf8707ee1baef4"
+    // Groq key built at runtime
+  },
   API_ENDPOINTS: {
-    GROQ_CHAT: 'https://corsproxy.io/?https://api.groq.com/openai/v1/chat/completions',
+    GROQ_CHAT: 'https://api.groq.com/openai/v1/chat/completions',
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
   AI_MODEL: 'llama-3.1-8b-instant',
@@ -165,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- Groq (Obfuscated + CORS Proxy) ---
+  // --- Groq (Split Key) ---
   async function getAIResponse(messages) {
     try {
       const response = await fetch(CONFIG.API_ENDPOINTS.GROQ_CHAT, {
@@ -187,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Groq API error (${response.status}): ${errorText}`);
+        throw new Error(`Groq error (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
@@ -204,7 +208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const response = await fetch(CONFIG.API_ENDPOINTS.DEEPGRAM_SPEAK, {
         method: 'POST',
         headers: {
-          'Authorization': `Token 72bdc80654e54efc8b97dbf7f5cf8707ee1baef4`,
+          'Authorization': `Token ${CONFIG.API_KEYS.DEEPGRAM}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ text })
