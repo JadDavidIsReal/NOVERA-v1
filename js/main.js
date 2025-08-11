@@ -11,7 +11,7 @@ const CONFIG = {
     QWEN: "sk-59ed0f89501a44e295baa83a1f520406"
   },
   API_ENDPOINTS: {
-    QWEN_CHAT: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generations',
+    QWEN_CHAT: 'https://dashscope-ap-southeast-1.aliyuncs.com/api/v1/services/aigc/text-generation/generations',
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
   AI_MODEL: 'qwen-flash',
