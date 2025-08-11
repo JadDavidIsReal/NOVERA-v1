@@ -1,0 +1,520 @@
+/* ----------------------------------------
+   Novera - Visual Interface (Refactored Merge)
+   Combines "Executive Flame Design (Phase 1B)" and "Phase 1-A.2"
+   ---------------------------------------- */
+
+/* --- CSS Custom Properties (Variables) --- */
+:root {
+  /* --- Fonts --- */
+  --brand-font: 'Segoe UI', 'Helvetica Neue', 'Roboto', 'Arial', sans-serif;
+
+  /* --- Base Colors --- */
+  --text-color: #e0e0e0;
+  --background-color: #05070a; /* From style.css */
+
+  /* --- Executive Flame Design (Phase 1B) - Default --- */
+  --executive-orb-bg-dark: #1018299e;
+  --executive-orb-bg-light: #1a2233;
+  --executive-glow-color: rgba(220, 225, 240, 0.8); /* Crisp, pale silver */
+  --executive-highlight-color: rgba(255, 255, 255, 0);
+  --executive-subtitle-color: rgba(220, 225, 240, 0.7);
+
+  /* --- Phase 1-A.2 Design --- */
+  --phase1a2-orb-gradient-start: #2bd0ff; /* Bright Blue */
+  --phase1a2-orb-gradient-end: #7f00ff;   /* Vivid Purple */
+  --phase1a2-glow-inner-color: rgba(43, 208, 255, 0.6);
+  --phase1a2-glow-outer-color-1: rgba(43, 208, 255, 0.2);
+  --phase1a2-glow-outer-color-2: rgba(127, 0, 255, 0.2);
+  --phase1a2-ripple-color: rgba(43, 208, 255, 0.7);
+  --phase1a2-core-wave-color: rgba(255, 255, 255, 0.8);
+
+  /* --- Currently Active Theme --- */
+  --active-orb-bg-dark: var(--executive-orb-bg-dark);
+  --active-orb-bg-light: var(--executive-orb-bg-light);
+  --active-glow-color: var(--executive-glow-color);
+  --active-highlight-color: var(--executive-highlight-color);
+  --active-subtitle-color: var(--executive-subtitle-color);
+  --active-orb-gradient-start: var(--phase1a2-orb-gradient-start);
+  --active-orb-gradient-end: var(--phase1a2-orb-gradient-end);
+  --active-glow-inner-color: var(--phase1a2-glow-inner-color);
+  --active-glow-outer-color-1: var(--phase1a2-glow-outer-color-1);
+  --active-glow-outer-color-2: var(--phase1a2-glow-outer-color-2);
+  --active-ripple-color: var(--phase1a2-ripple-color);
+  --active-core-wave-color: var(--phase1a2-core-wave-color);
+}
+
+/* --- General Setup --- */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--brand-font);
+    overflow: hidden;
+    position: relative;
+}
+
+/* --- Layout Containers --- */
+.novera-header {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    z-index: 10;
+    padding: 0;
+}
+
+.main-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.settings-footer {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10;
+    padding: 0;
+}
+
+/* --- UI Elements --- */
+.novera-header h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+}
+
+.settings-icon {
+    width: 24px;
+    height: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.settings-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-color);
+    opacity: 0.7;
+    transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+}
+
+.settings-icon:hover span {
+    background-color: var(--text-color);
+    opacity: 1;
+}
+
+/* --- Orb Container & Base Orb --- */
+.orb-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* --- Base Orb with Deformation Support --- */
+.orb {
+    width: 20vw;
+    height: 20vw;
+    min-width: 280px;
+    min-height: 280px;
+    position: relative;
+    border-radius: 50%;
+    background: radial-gradient(circle at 60% 30%, var(--active-orb-bg-light), var(--active-orb-bg-dark) 80%);
+    box-shadow: inset 0 0 50px 10px #000, 0 0 10px -2px var(--active-glow-color);
+    cursor: pointer;
+    animation: breathe 8s ease-in-out infinite;
+    z-index: 1;
+    transition: 
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+        clip-path 0.2s ease;
+}
+
+/* --- Executive Flame Specific Elements --- */
+/* Glossy Highlight */
+.orb::before {
+    content: '';
+    position: absolute;
+    top: 5%; left: 15%;
+    width: 70%; height: 20%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--active-highlight-color), transparent 65%);
+    opacity: 0.2;
+}
+
+/* Sonar Ripples (Idle) */
+.orb::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--active-glow-color);
+    animation: sonar-ripple 4s ease-out infinite;
+    opacity: 0;
+}
+
+.heat-haze {
+    position: absolute;
+    top: -10%; left: -10%;
+    width: 120%; height: 120%;
+    border-radius: 50%;
+    animation: heat-shimmer 10s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+.loading-ring {
+    position: absolute;
+    top: -5%; left: -5%;
+    width: 110%; height: 110%;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--active-glow-color);
+    opacity: 0;
+    transform: rotate(0deg);
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+/* --- Phase 1-A.2 Specific Elements --- */
+.inner-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: inset 0 0 20px 8px var(--active-glow-inner-color);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.outer-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: 0 0 40px 15px var(--active-glow-outer-color-1), 0 0 80px 40px var(--active-glow-outer-color-2);
+    opacity: 0;
+    transition: opacity 0.5s ease, box-shadow 4s ease-in-out;
+    animation: glowPulse 4s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.ripple {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--active-ripple-color);
+    transform: scale(0.8);
+    opacity: 0;
+    animation: haloRipple 3s ease-out infinite;
+    animation-delay: 1s;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* --- Orb Core --- */
+.orb-core {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 8px; height: 8px;
+    margin: -4px 0 0 -4px;
+    border-radius: 70%;
+    background: #ffffff42;
+    box-shadow: 0 0 15px 3px var(--active-glow-color);
+    z-index: 3;
+}
+
+/* --- Smooth Waveform (Replaces core-waveform) --- */
+.waveform {
+    width: 90%;
+    height: 40px;
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.waveform svg {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.wave {
+    stroke: var(--active-glow-color);
+    stroke-width: 2;
+    fill: none;
+    opacity: 0.6;
+    transition: stroke-opacity 0.3s ease;
+}
+
+/* Fade in when listening */
+.orb--listening ~ .subtitle-container .waveform .wave {
+    stroke-opacity: 0.9;
+}
+
+.waveform {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.orb--listening ~ .subtitle-container .waveform {
+    opacity: 1;
+}
+
+/* --- Text Displays --- */
+.subtitle-container {
+    height: 3.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.transcription {
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--active-subtitle-color);
+    opacity: 0.7;
+    min-height: 1.2rem;
+    margin: 0 0 0.3rem 0;
+    transition: opacity 0.3s ease;
+}
+
+.subtitle {
+    font-size: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--active-subtitle-color);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.subtitle.visible {
+    opacity: 1;
+}
+
+.instructions {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+/* ----------------------------------
+   KEYFRAMES
+   ---------------------------------- */
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+@keyframes sonar-ripple {
+    from { transform: scale(1); opacity: 0.5; }
+    to   { transform: scale(1.3); opacity: 0; }
+}
+
+@keyframes heat-shimmer {
+    from { transform: rotate(0deg) scale(1); box-shadow: 0 0 30px -15px var(--active-glow-color); }
+    to   { transform: rotate(90deg) scale(1.05); box-shadow: 0 0 40px -10px var(--active-glow-color); }
+}
+
+@keyframes speak-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+}
+
+@keyframes loading-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 40px 15px var(--active-glow-outer-color-1), 0 0 80px 40px var(--active-glow-outer-color-2);
+        opacity: 1;
+    }
+    50% {
+        box-shadow: 0 0 50px 20px var(--active-glow-outer-color-1), 0 0 90px 45px var(--active-glow-outer-color-2);
+        opacity: 0.8;
+    }
+}
+
+@keyframes haloRipple {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+/* --- Listening Deformation --- */
+.orb--listening {
+  clip-path: path('M50,0 C77.6,0 100,22.4 100,50 C100,77.6 77.6,100 50,100 C22.4,100 0,77.6 0,50 C0,22.4 22.4,0 50,0');
+  transform: scaleY(0.97) scaleX(1.03);
+}
+
+/* --- State-Specific Styling --- */
+.orb--listening, .orb--thinking, .orb--speaking, .orb--loading {
+    animation: none;
+}
+.orb--listening::after, .orb--thinking::after, .orb--speaking::after, .orb--loading::after {
+    animation: none;
+}
+
+.orb--listening::after {
+    animation: sonar-ripple 1.5s ease-out infinite;
+    opacity: 0.5;
+}
+
+.orb--thinking .loading-ring {
+    opacity: 1;
+    animation: loading-spin 1.5s linear infinite;
+}
+
+.orb--speaking {
+    animation: breathe 1s ease-in-out infinite;
+    box-shadow: inset 0 0 50px 10px #000, 0 0 20px 5px var(--active-glow-color);
+}
+
+.orb--speaking .orb-core {
+    animation: speak-pulse 0.5s ease-in-out infinite;
+}
+
+.orb--loading .loading-ring {
+    opacity: 1;
+    animation: loading-spin 1s linear infinite;
+}
+
+/* ----------------------------------
+   SWITCHING TO PHASE 1-A.2 VISUAL STYLE
+   ---------------------------------- */
+.theme-phase1a2 .orb {
+    background: radial-gradient(circle, var(--active-orb-gradient-start), var(--active-orb-gradient-end));
+    box-shadow: none;
+    animation: idleBreathing 4s ease-in-out infinite;
+}
+
+.theme-phase1a2 .inner-glow,
+.theme-phase1a2 .outer-glow,
+.theme-phase1a2 .ripple {
+    opacity: 1;
+}
+
+.theme-phase1a2 .waveform {
+    opacity: 1;
+}
+
+.theme-phase1a2 .orb::before,
+.theme-phase1a2 .orb::after,
+.theme-phase1a2 .heat-haze {
+    opacity: 0;
+    animation: none;
+}
+
+.theme-phase1a2 .orb--listening {
+    animation: idleBreathing 2s ease-in-out infinite;
+    box-shadow: none;
+}
+
+.theme-phase1a2 .orb--thinking .loading-ring {
+    border-top-color: var(--active-glow-color);
+}
+
+.theme-phase1a2 .orb--speaking {
+    animation: idleBreathing 1s ease-in-out infinite;
+}
+
+.theme-phase1a2 .orb--speaking .orb-core {
+     animation: speak-pulse 0.5s ease-in-out infinite;
+}
+
+.theme-phase1a2 .orb--loading .loading-ring {
+    border-top-color: var(--active-glow-color);
+}
+
+/* ----------------------------------
+   RESPONSIVENESS
+   ---------------------------------- */
+@media (max-width: 768px) {
+    .orb {
+        width: 45vw;
+        height: 45vw;
+        min-width: 220px;
+        min-height: 220px;
+    }
+
+    .novera-header {
+        top: 1.5rem;
+        left: 1.5rem;
+    }
+
+    .settings-footer {
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+
+    .novera-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .transcription {
+        font-size: 0.8rem;
+    }
+
+    .instructions {
+        font-size: 0.75rem;
+    }
+
+    .orb {
+        pointer-events: auto;
+        cursor: pointer;
+    }
+}
+
+@media (min-width: 769px) {
+    .orb {
+        pointer-events: none;
+        cursor: default;
+    }
+}
+
+/* Fade out effect for subtitle */
+.subtitle.fade-out {
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+@keyframes idleBreathing {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.03);
+    }
+}
