@@ -1,0 +1,25 @@
+{
+  "name": "auni-v2",
+  "version": "1.0.0",
+  "description": "(formerly Auni)\r **NOVERA** stands for:  \r **N**atural **O**perative **V**irtual **E**ntity for **R**esponsive **A**ssistance",
+  "main": "proxy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JadDavidIsReal/NOVERA-v1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JadDavidIsReal/NOVERA-v1/issues"
+  },
+  "homepage": "https://github.com/JadDavidIsReal/NOVERA-v1#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "undici": "^7.13.0"
+  }
+}

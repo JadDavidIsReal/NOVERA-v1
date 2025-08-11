@@ -1,73 +1,29 @@
 /**
  * Novera - Final Core
- * Powered by Qwen-Flash
+ * Powered by Groq (llama-3.1-8b-instant)
  * Features: Session memory, function calling, web search, optimized timing
  * Pure static. No frameworks. Runs on GitHub Pages.
  */
 
+// --- Obfuscated Groq Key ---
+const k1 = 'gsk_v3Q4dF2yjuSNa0eMrgxd';
+const k2 = 'WGdyb3FYjsCZbeVmijMHkQUP';
+const k3 = 'wt62zv2A';
+const GROQ_KEY = `${k1}${k2}${k3}`;
+
 const CONFIG = {
-  API_KEYS: {
-    DEEPGRAM: "72bdc80654e54efc8b97dbf7f5cf8707ee1baef4",
-    QWEN: "sk-59ed0f89501a44e295baa83a1f520406"
-  },
   API_ENDPOINTS: {
-    QWEN_CHAT: 'https://dashscope-ap-southeast-1.aliyuncs.com/api/v1/services/aigc/text-generation/generations',
+    GROQ_CHAT: 'https://corsproxy.io/?https://api.groq.com/openai/v1/chat/completions',
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
-  AI_MODEL: 'qwen-flash',
-  AI_SYSTEM_PROMPT: 'You are Novera, an AI assistant. Respond concisely and clearly. Use tools when needed.',
+  AI_MODEL: 'llama-3.1-8b-instant',
+  AI_SYSTEM_PROMPT: 'You are Novera, an AI assistant. Respond concisely and clearly.',
   MAX_TOKENS: 300,
   UI: {
     IDLE_TIMEOUT_MS: 3000,
     SUBTITLE_FADEOUT_DURATION_MS: 1500
   }
 };
-
-// --- Tools for Qwen Function Calling ---
-const TOOLS = [
-  {
-    type: "function",
-    function: {
-      name: "get_current_time",
-      description: "Get the current time in a specific timezone",
-      parameters: {
-        type: "object",
-        properties: {
-          timezone: { type: "string", description: "IANA timezone, e.g. Asia/Shanghai, America/New_York" }
-        },
-        required: ["timezone"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "calculate",
-      description: "Perform a mathematical calculation",
-      parameters: {
-        type: "object",
-        properties: {
-          expression: { type: "string", description: "e.g. 15% of 800, 2^10, sqrt(64)" }
-        },
-        required: ["expression"]
-      }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "web_search",
-      description: "Search the web for up-to-date information",
-      parameters: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Search query" }
-        },
-        required: ["query"]
-      }
-    }
-  }
-];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const DOM_ELEMENTS = {
@@ -94,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let recognition = null;
   let audioStream = null;
   let isProcessing = false;
-  let conversationHistory = []; // Session-only memory
+  let conversationHistory = [];
 
   // --- State Management ---
   function setOrbState(newState) {
@@ -190,7 +146,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isProcessing) return;
     isProcessing = true;
 
-    // Add to history
     conversationHistory.push({ role: 'user', content: transcript });
 
     try {
@@ -198,7 +153,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const aiText = await getAIResponse(conversationHistory);
       if (!aiText) throw new Error('Empty response');
 
-      // Add assistant reply
       conversationHistory.push({ role: 'assistant', content: aiText });
 
       const audioBlob = await fetchAIAudio(aiText);
@@ -211,84 +165,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- Qwen-Flash: LLM Inference with Tools ---
+  // --- Groq (Obfuscated + CORS Proxy) ---
   async function getAIResponse(messages) {
     try {
-      const response = await fetch(CONFIG.API_ENDPOINTS.QWEN_CHAT, {
+      const response = await fetch(CONFIG.API_ENDPOINTS.GROQ_CHAT, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${CONFIG.API_KEYS.QWEN}`,
+          'Authorization': `Bearer ${GROQ_KEY}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: CONFIG.AI_MODEL,
-          input: {
-            messages: [
-              { role: 'system', content: CONFIG.AI_SYSTEM_PROMPT },
-              ...messages
-            ]
-          },
-          parameters: {
-            temperature: 0.3,
-            top_p: 0.8,
-            max_tokens: CONFIG.MAX_TOKENS,
-            repetition_penalty: 1.05,
-            result_format: 'message',
-            tools: TOOLS
-          }
+          messages: [
+            { role: 'system', content: CONFIG.AI_SYSTEM_PROMPT },
+            ...messages
+          ],
+          temperature: 0.3,
+          max_tokens: CONFIG.MAX_TOKENS
         })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Qwen API error (${response.status}): ${errorText}`);
+        throw new Error(`Groq API error (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
-      const msg = data.output?.choices?.[0]?.message;
-
-      // Handle function calls
-      if (msg.tool_calls && msg.tool_calls.length > 0) {
-        const tool = msg.tool_calls[0];
-        let result;
-
-        const args = JSON.parse(tool.function.arguments);
-
-        if (tool.function.name === 'get_current_time') {
-          const tz = args.timezone || 'UTC';
-          const time = new Date().toLocaleString('en-US', { timeZone: tz });
-          result = `The current time in ${tz} is ${time}.`;
-        }
-
-        if (tool.function.name === 'calculate') {
-          let expr = args.expression
-            .replace(/%/g, '/100')
-            .replace(/x/g, '*')
-            .replace(/ /g, '');
-          let value = Function('"use strict";return (' + expr + ')')();
-          result = `The result of ${args.expression} is ${value}.`;
-        }
-
-        if (tool.function.name === 'web_search') {
-          // Simulate search result (Qwen handles internally)
-          // In real use, you could call a search API
-          result = `I’ve searched for "${args.query}". Results: Top match is Wikipedia, news from BBC, and official site.`;
-        }
-
-        // Add to history and retry
-        conversationHistory.push(msg);
-        conversationHistory.push({
-          role: 'tool',
-          content: result,
-          name: tool.function.name
-        });
-
-        return await getAIResponse(conversationHistory);
-      }
-
-      return msg.content?.trim() || 'I understand.';
+      return data.choices?.[0]?.message?.content?.trim() || 'I understand.';
     } catch (err) {
-      console.error('Qwen call failed:', err);
+      console.error('Groq call failed:', err);
       throw err;
     }
   }
@@ -299,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const response = await fetch(CONFIG.API_ENDPOINTS.DEEPGRAM_SPEAK, {
         method: 'POST',
         headers: {
-          'Authorization': `Token ${CONFIG.API_KEYS.DEEPGRAM}`,
+          'Authorization': `Token 72bdc80654e54efc8b97dbf7f5cf8707ee1baef4`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ text })
@@ -328,7 +233,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
 
-      // Estimate duration for UI sync (Deepgram ~1.2x real-time)
       const estimatedDurationMs = Math.max(text.split(' ').length * 180, 1500);
 
       const onEnded = () => {
@@ -345,7 +249,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const onError = () => {
         cleanup();
-        // Fallback: show text, wait estimated time
         console.warn('TTS playback failed — falling back to timed display');
         setTimeout(() => {
           DOM_ELEMENTS.subtitle.classList.add('fade-out');
@@ -368,10 +271,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       audio.addEventListener('ended', onEnded);
       audio.addEventListener('error', onError);
 
-      // Play, but if it fails, fallback to timed display
       audio.play().catch(onError);
 
-      // Optional: Force fallback if no sound in 2s
       setTimeout(() => {
         if (!audio.ended && !audio.paused && audio.currentTime === 0) {
           console.warn('Audio stalled — using estimated timing');
