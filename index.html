@@ -4,24 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Novera</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <!-- *** CHANGED: Link to the new, refactored CSS file *** -->
+  <link rel="stylesheet" href="css/novera.css" />
+  <!-- **************** -->
 </head>
-<body>
+<!-- *** OPTIONAL: Add 'theme-phase1a2' class to body to switch visual styles *** -->
+<body> <!-- Or <body class="theme-phase1a2"> -->
+<!-- **************** -->
   <header class="novera-header">
     <h1>Novera</h1>
   </header>
 
   <main class="main-content">
     <div class="orb-container">
+      <!-- The orb now includes elements for both design phases -->
       <div class="orb">
+        <div class="inner-glow"></div>    <!-- For Phase 1-A.2 -->
+        <div class="outer-glow"></div>    <!-- For Phase 1-A.2 -->
         <div class="orb-core"></div>
         <div class="loading-ring"></div>
-        <div class="heat-haze"></div>
+        <div class="heat-haze"></div>     <!-- For Executive Flame -->
+        <div class="ripple"></div>        <!-- For Phase 1-A.2 -->
       </div>
+
+      <!-- Subtitle and Waveform Container -->
       <div class="subtitle-container">
         <p class="transcription"></p>
         <p class="subtitle"></p>
+
+        <!-- Smooth SVG Waveform (Replaces core-waveform bars) -->
+        <div class="waveform">
+          <svg viewBox="0 0 300 100" preserveAspectRatio="none">
+            <path class="wave" d="M0,50 C50,30 100,70 150,50 C200,30 250,70 300,50" />
+          </svg>
+        </div>
       </div>
+
       <div class="instructions"></div>
     </div>
   </main>
