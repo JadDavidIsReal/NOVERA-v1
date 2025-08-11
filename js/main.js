@@ -6,7 +6,12 @@
  * LLM: TogetherAI
  * Runs directly from GitHub Pages.
  *
- * Now: Real-time waveform driven by mic input.
+ * Refactored for:
+ * - Better structure and readability
+ * - Improved error handling
+ * - Reduced redundancy
+ * - Easier configuration
+ * - Potential for future enhancements
  */
 
 // --- Configuration ---
@@ -16,7 +21,7 @@ const CONFIG = {
     TOGETHER: "tgp_v1_r2rYPrNc_5JHCSKwwWJdsCkJh2JoLfTpiiRBsIpDD2g"
   },
   API_ENDPOINTS: {
-    TOGETHER_CHAT: 'https://api.together.xyz/v1/chat/completions', // ✅ Fixed: removed trailing spaces
+    TOGETHER_CHAT: 'https://api.together.xyz/v1/chat/completions', // ✅ Fixed: Removed trailing spaces
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
   AI_MODEL: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
@@ -34,10 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     orb: document.querySelector('.orb'),
     subtitle: document.querySelector('.subtitle'),
     transcriptionDisplay: document.querySelector('.transcription'),
-    instructions: document.querySelector('.instructions'),
-    wave: document.querySelector('.wave') // ✅ New: SVG path
+    instructions: document.querySelector('.instructions')
   };
 
+  // Critical check
   if (!DOM_ELEMENTS.orb || !DOM_ELEMENTS.subtitle || !DOM_ELEMENTS.transcriptionDisplay) {
     console.error('Critical UI elements missing.');
     return;
@@ -57,12 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let audioStream = null;
   let isProcessing = false;
 
-  // --- Web Audio for Visualization ---
-  let audioContext = null;
-  let analyser = null;
-  let dataArray = null;
-  let animationFrameId = null;
-
   // --- State Management ---
   function setOrbState(newState) {
     if (currentState === newState) return;
@@ -80,33 +79,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
       DOM_ELEMENTS.subtitle.textContent = '';
       DOM_ELEMENTS.transcriptionDisplay.textContent = '';
-      // Stop waveform animation
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      }
     }
 
     currentState = newState;
     console.log('Novera state:', newState.name);
   }
 
-  // --- Initialize Microphone (for both STT and Visualization) ---
+  // --- Initialize Microphone ---
   async function initMicrophone() {
     try {
       if (!audioStream) {
         audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         console.log('Microphone access granted.');
-
-        // ✅ Initialize Web Audio for visualization
-        if (!audioContext) {
-          audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          analyser = audioContext.createAnalyser();
-          const source = audioContext.createMediaStreamSource(audioStream);
-          source.connect(analyser);
-          analyser.fftSize = 64;
-          dataArray = new Uint8Array(analyser.frequencyBinCount);
-        }
       }
     } catch (err) {
       console.error('Microphone access denied:', err);
@@ -118,6 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function setupSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
+      console.warn('Web Speech API not supported.');
       handleError('Speech not supported.');
       return;
     }
@@ -130,7 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     recognition.onstart = () => {
       setOrbState(STATES.LISTENING);
       DOM_ELEMENTS.transcriptionDisplay.textContent = '';
-      startWaveAnimation(); // ✅ Start waveform
     };
 
     recognition.onresult = (event) => {
@@ -140,9 +124,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          final += transcript + ' ';
+            final += transcript + ' ';
         } else {
-          interim += transcript;
+            interim += transcript;
         }
       }
       DOM_ELEMENTS.transcriptionDisplay.textContent = final + interim;
@@ -151,42 +135,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
       if (event.error !== 'no-speech' || currentState !== STATES.IDLE) {
-        handleError('Speech recognition failed.');
+         handleError('Speech recognition failed.');
       } else {
-        setOrbState(STATES.IDLE);
+          setOrbState(STATES.IDLE);
       }
     };
 
     recognition.onend = () => {
-      // ✅ Add slight delay to prevent flicker
-      setTimeout(() => {
-        if (currentState === STATES.LISTENING) {
-          const transcript = DOM_ELEMENTS.transcriptionDisplay.textContent.trim();
-          if (transcript) {
-            processUserInput(transcript);
-          } else {
-            setOrbState(STATES.IDLE);
+      if (currentState === STATES.LISTENING) {
+        // ✅ Added: Small delay to prevent flicker
+        setTimeout(() => {
+          if (currentState === STATES.LISTENING) {
+            const transcript = DOM_ELEMENTS.transcriptionDisplay.textContent.trim();
+            if (transcript) {
+              processUserInput(transcript);
+            } else {
+              setOrbState(STATES.IDLE);
+            }
           }
-        }
-      }, 100); // Prevents false stop
+        }, 100);
+      }
     };
   }
 
   // --- Centralized Error Handling ---
   function handleError(message) {
-    setOrbState(STATES.ERROR);
-    DOM_ELEMENTS.subtitle.textContent = message;
-    DOM_ELEMENTS.transcriptionDisplay.textContent = '';
-    setTimeout(() => {
-      if (currentState === STATES.ERROR) {
-        setOrbState(STATES.IDLE);
-      }
-    }, CONFIG.UI.IDLE_TIMEOUT_MS);
+      setOrbState(STATES.ERROR);
+      DOM_ELEMENTS.subtitle.textContent = message;
+      DOM_ELEMENTS.transcriptionDisplay.textContent = '';
+      setTimeout(() => {
+          if (currentState === STATES.ERROR) {
+              setOrbState(STATES.IDLE);
+          }
+      }, CONFIG.UI.IDLE_TIMEOUT_MS);
   }
 
   // --- AI Interaction Flow ---
   async function processUserInput(transcript) {
-    if (isProcessing) return;
+    if (isProcessing) {
+        console.warn("Already processing input, ignoring new transcript:", transcript);
+        return;
+    }
     isProcessing = true;
 
     try {
@@ -231,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const data = await response.json();
       if (!data.choices || !data.choices[0] || !data.choices[0].message || typeof data.choices[0].message.content !== 'string') {
-        throw new Error('Unexpected response structure from LLM API');
+          throw new Error('Unexpected response structure from LLM API');
       }
       return data.choices[0].message.content.trim();
     } catch (err) {
@@ -267,90 +256,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --- Play AI Audio ---
   function playAIAudioResponse(text, audioBlob) {
     return new Promise((resolve, reject) => {
-      setOrbState(STATES.SPEAKING);
-      DOM_ELEMENTS.subtitle.textContent = text;
-      DOM_ELEMENTS.subtitle.classList.add('visible');
-      DOM_ELEMENTS.transcriptionDisplay.textContent = '';
+        setOrbState(STATES.SPEAKING);
+        DOM_ELEMENTS.subtitle.textContent = text;
+        DOM_ELEMENTS.subtitle.classList.add('visible');
+        DOM_ELEMENTS.transcriptionDisplay.textContent = '';
 
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
 
-      const onEnded = () => {
-        cleanup();
-        DOM_ELEMENTS.subtitle.classList.add('fade-out');
-        setTimeout(() => {
-          DOM_ELEMENTS.subtitle.textContent = '';
-          DOM_ELEMENTS.subtitle.classList.remove('fade-out');
-          setOrbState(STATES.IDLE);
-          isProcessing = false;
-          resolve();
-        }, CONFIG.UI.SUBTITLE_FADEOUT_DURATION_MS);
-      };
+        const onEnded = () => {
+            cleanup();
+            DOM_ELEMENTS.subtitle.classList.add('fade-out');
+            setTimeout(() => {
+                DOM_ELEMENTS.subtitle.textContent = '';
+                DOM_ELEMENTS.subtitle.classList.remove('fade-out');
+                setOrbState(STATES.IDLE);
+                isProcessing = false;
+                resolve();
+            }, CONFIG.UI.SUBTITLE_FADEOUT_DURATION_MS);
+        };
 
-      const onError = (event) => {
-        cleanup();
-        console.error('Audio playback error:', event);
-        handleError('Audio playback error.');
-        isProcessing = false;
-        reject(new Error('Audio playback failed'));
-      };
+        const onError = (event) => {
+            cleanup();
+            console.error('Audio playback error:', event);
+            handleError('Audio playback error.');
+            isProcessing = false;
+            reject(new Error('Audio playback failed'));
+        };
 
-      const cleanup = () => {
-        audio.removeEventListener('ended', onEnded);
-        audio.removeEventListener('error', onError);
-        URL.revokeObjectURL(audioUrl);
-      };
+        const cleanup = () => {
+            audio.removeEventListener('ended', onEnded);
+            audio.removeEventListener('error', onError);
+            URL.revokeObjectURL(audioUrl);
+        };
 
-      audio.addEventListener('ended', onEnded);
-      audio.addEventListener('error', onError);
-      audio.play().catch(onError);
+        audio.addEventListener('ended', onEnded);
+        audio.addEventListener('error', onError);
+
+        audio.play().catch(onError);
     });
-  }
-
-  // --- Waveform Animation Engine ---
-  function startWaveAnimation() {
-    if (!DOM_ELEMENTS.wave || !analyser) return;
-
-    const svgPath = DOM_ELEMENTS.wave;
-    const width = 300;
-    const height = 100;
-    const segments = 10;
-    const points = Array(segments + 1).fill(0).map((_, i) => {
-      const x = (i / segments) * width;
-      const y = height / 2;
-      return { x, y };
-    });
-
-    function updateWave() {
-      analyser.getByteFrequencyData(dataArray);
-      const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-      const volume = average / 255; // 0 to 1
-
-      // Update Y values with wave effect
-      points.forEach((p, i) => {
-        const angle = (i / segments) * Math.PI * 2;
-        const ripple = Math.sin(angle * 2 + performance.now() / 500) * 15 * volume;
-        p.y = height / 2 + ripple * (0.5 + 0.5 * Math.sin(i));
-      });
-
-      // Generate smooth path
-      let d = `M ${points[0].x},${points[0].y}`;
-      for (let i = 1; i < points.length; i++) {
-        const cx = (points[i - 1].x + points[i].x) / 2;
-        const cy = (points[i - 1].y + points[i].y) / 2;
-        d += ` C ${cx},${points[i - 1].y} ${cx},${points[i].y} ${points[i].x},${points[i].y}`;
-      }
-      svgPath.setAttribute('d', d);
-
-      // Optional: Scale orb deformation
-      DOM_ELEMENTS.orb.style.clipPath = volume > 0.3
-        ? 'path("M50,0 C77.6,0 100,22.4 100,50 C100,77.6 77.6,100 50,100 C22.4,100 0,77.6 0,50 C0,22.4 22.4,0 50,0")'
-        : 'path("M50,0 C70,0 100,30 100,50 C100,70 70,100 50,100 C30,100 0,70 0,50 C0,30 30,0 50,0")';
-
-      animationFrameId = requestAnimationFrame(updateWave);
-    }
-
-    updateWave();
   }
 
   // --- Input Handlers ---
@@ -358,13 +302,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentState === STATES.IDLE && recognition && audioStream) {
       recognition.start();
     } else if (currentState === STATES.IDLE) {
+      console.log("Initializing mic/recognition...");
       initMicrophone().then(setupSpeechRecognition).then(() => {
-        if (currentState === STATES.IDLE && recognition && audioStream) {
-          recognition.start();
-        }
+           if (currentState === STATES.IDLE && recognition && audioStream) {
+               recognition.start();
+           }
       }).catch(err => {
-        console.error("Failed to initialize for listening:", err);
-        handleError("Initialization failed.");
+           console.error("Failed to initialize:", err);
+           handleError("Initialization failed.");
       });
     }
   }
@@ -379,6 +324,80 @@ document.addEventListener('DOMContentLoaded', async () => {
   function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
            window.innerWidth <= 768;
+  }
+
+  // --- Web Audio for Visualization ---
+  let audioContext = null;
+  let analyser = null;
+  let dataArray = null;
+  let animationFrameId = null;
+  let isAudioVisualizing = false;
+
+  const waveformContainer = document.querySelector('.waveform');
+  const svgPath = document.querySelector('.wave');
+
+  if (waveformContainer && svgPath) {
+    async function connectMicrophoneForVisualization() {
+      try {
+        if (!audioStream) await initMicrophone();
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (!analyser) {
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 64;
+          analyser.smoothingTimeConstant = 0.8;
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+        }
+
+        const source = audioContext.createMediaStreamSource(audioStream);
+        source.connect(analyser);
+
+        isAudioVisualizing = true;
+        updateWave();
+      } catch (err) {
+        console.warn('Audio visualization failed:', err);
+      }
+    }
+
+    function getVolume() {
+      analyser.getByteFrequencyData(dataArray);
+      const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+      return Math.pow(volume / 255, 2);
+    }
+
+    function updateWave() {
+      if (!isAudioVisualizing) return;
+
+      const vol = getVolume();
+      const width = 300;
+      const height = 100;
+      const centerY = height / 2;
+      const amplitude = vol * 30;
+
+      const c1x = width * 0.25;
+      const c2x = width * 0.75;
+      const c1y = centerY + Math.sin(vol * Math.PI) * amplitude * 1.5;
+      const c2y = centerY - Math.sin(vol * Math.PI) * amplitude * 1.5;
+
+      const d = `M0,${centerY} C${c1x},${c1y} ${c2x},${c2y} ${width},${centerY}`;
+      svgPath.setAttribute('d', d);
+
+      // ✅ Safe orb feedback: no clip-path, no cropping
+      DOM_ELEMENTS.orb.style.transform = `scale(${1 + vol * 0.03})`;
+      DOM_ELEMENTS.orb.style.filter = `brightness(${1 + vol * 0.15})`;
+
+      animationFrameId = requestAnimationFrame(updateWave);
+    }
+
+    // Wrap startListening to auto-init visualization
+    const originalStartListening = startListening;
+    startListening = function () {
+      if (!isAudioVisualizing) {
+        connectMicrophoneForVisualization();
+      }
+      originalStartListening();
+    };
   }
 
   // --- Event Listeners ---
@@ -400,16 +419,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     DOM_ELEMENTS.orb.addEventListener('touchstart', (e) => {
       e.preventDefault();
       pressTimer = setTimeout(() => {
-        startListening();
+         startListening();
       }, 200);
     });
 
     const cancelListen = (e) => {
-      clearTimeout(pressTimer);
-      if (currentState === STATES.LISTENING) {
-        e.preventDefault();
-        stopListening();
-      }
+        clearTimeout(pressTimer);
+        if (currentState === STATES.LISTENING) {
+            e.preventDefault();
+            stopListening();
+        }
     };
 
     DOM_ELEMENTS.orb.addEventListener('touchend', cancelListen);
@@ -427,13 +446,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    await initMicrophone();
-    setupSpeechRecognition();
-    setInstructions();
-    setOrbState(STATES.IDLE);
-    console.log('Novera initialized.');
+      await initMicrophone();
+      setupSpeechRecognition();
+      setInstructions();
+      setOrbState(STATES.IDLE);
+      console.log('Novera initialized.');
   } catch (initError) {
-    console.error("Fatal initialization error:", initError);
-    handleError("Failed to start. Please check console.");
+      console.error("Fatal initialization error:", initError);
+      handleError("Failed to start. Please check console.");
   }
+
 });

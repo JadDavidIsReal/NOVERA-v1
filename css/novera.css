@@ -48,6 +48,8 @@ html, body {
     margin: 0;
     padding: 0;
     width: 100%;
+    /* height: 100%;  Using 100vh can sometimes cause issues with mobile browsers.
+                      If full viewport height is crucial, consider a JS-based solution or test carefully. */
     height: 100vh;
     background-color: var(--background-color);
     color: var(--text-color);
@@ -62,7 +64,7 @@ html, body {
     top: 2rem;
     left: 2rem;
     z-index: 10;
-    padding: 0;
+    padding: 0; /* Remove padding from style.css */
 }
 
 .main-content {
@@ -78,7 +80,7 @@ html, body {
     bottom: 2rem;
     right: 2rem;
     z-index: 10;
-    padding: 0;
+    padding: 0; /* Remove padding from style.css */
 }
 
 /* --- UI Elements --- */
@@ -86,7 +88,7 @@ html, body {
     font-size: 1.4rem;
     font-weight: 300;
     letter-spacing: 0.05em;
-    color: var(--text-color);
+    color: var(--text-color); /* Use variable */
     margin: 0;
     padding: 0;
 }
@@ -104,42 +106,40 @@ html, body {
     display: block;
     width: 100%;
     height: 2px;
-    background-color: var(--text-color);
-    opacity: 0.7;
-    transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    background-color: var(--text-color); /* Use variable */
+    opacity: 0.7; /* Match style.css */
+    transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease; /* Added opacity */
 }
 
 .settings-icon:hover span {
+    /* Default to Executive style text color change on hover */
     background-color: var(--text-color);
     opacity: 1;
 }
 
 /* --- Orb Container & Base Orb --- */
 .orb-container {
-    position: relative;
+    position: relative; /* Needed for absolute positioning of pseudo-elements and ripple */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.5rem; /* From style.css */
 }
 
-/* --- Base Orb with Deformation Support --- */
 .orb {
-    width: 20vw;
+    width: 20vw; /* Use larger size from style.css as default */
     height: 20vw;
-    min-width: 280px;
+    min-width: 280px; /* Use larger min size from style.css as default */
     min-height: 280px;
     position: relative;
     border-radius: 50%;
+    /* --- Base Executive Flame Style --- */
     background: radial-gradient(circle at 60% 30%, var(--active-orb-bg-light), var(--active-orb-bg-dark) 80%);
     box-shadow: inset 0 0 50px 10px #000, 0 0 10px -2px var(--active-glow-color);
     cursor: pointer;
-    animation: breathe 8s ease-in-out infinite;
-    z-index: 1;
-    transition: 
-        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-        clip-path 0.2s ease;
+    animation: breathe 8s ease-in-out infinite; /* Start with idle animation */
+    z-index: 1; /* Ensure orb is above ripple */
 }
 
 /* --- Executive Flame Specific Elements --- */
@@ -172,7 +172,7 @@ html, body {
     width: 120%; height: 120%;
     border-radius: 50%;
     animation: heat-shimmer 10s ease-in-out infinite alternate;
-    pointer-events: none;
+    pointer-events: none; /* Don't interfere with orb clicks */
 }
 
 .loading-ring {
@@ -185,35 +185,38 @@ html, body {
     opacity: 0;
     transform: rotate(0deg);
     transition: opacity 0.3s ease;
-    pointer-events: none;
+    pointer-events: none; /* Don't interfere */
 }
 
-/* --- Phase 1-A.2 Specific Elements --- */
+/* --- Phase 1-A.2 Specific Elements (Initially Hidden/Inactive) --- */
+/* Inner Glow */
 .inner-glow {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 50%;
     box-shadow: inset 0 0 20px 8px var(--active-glow-inner-color);
-    opacity: 0;
+    opacity: 0; /* Hidden by default */
     transition: opacity 0.5s ease;
     pointer-events: none;
-    z-index: -1;
+    z-index: -1; /* Behind the main orb content */
 }
 
+/* Outer Glow */
 .outer-glow {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 50%;
     box-shadow: 0 0 40px 15px var(--active-glow-outer-color-1), 0 0 80px 40px var(--active-glow-outer-color-2);
-    opacity: 0;
-    transition: opacity 0.5s ease, box-shadow 4s ease-in-out;
-    animation: glowPulse 4s ease-in-out infinite;
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.5s ease, box-shadow 4s ease-in-out; /* Add transition for glow pulse */
+    animation: glowPulse 4s ease-in-out infinite; /* Add glow pulse animation */
     pointer-events: none;
-    z-index: -1;
+    z-index: -1; /* Behind the main orb content */
 }
 
+/* Halo Ripple */
 .ripple {
     position: absolute;
     width: 100%;
@@ -224,60 +227,54 @@ html, body {
     opacity: 0;
     animation: haloRipple 3s ease-out infinite;
     animation-delay: 1s;
-    z-index: 0;
+    z-index: 0; /* Below the orb itself */
     pointer-events: none;
 }
 
-/* --- Orb Core --- */
+/* Core Waveform */
+.core-waveform {
+    position: relative;
+    width: 50%;
+    height: 50%;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    z-index: 2;
+    filter: blur(1px);
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.core-waveform span {
+    width: 10%;
+    height: 10%;
+    background-color: var(--active-core-wave-color);
+    border-radius: 2px;
+    animation: waveform 1.5s ease-in-out infinite alternate;
+    opacity: 0.4; /* Match initial opacity from styles.css */
+}
+
+/* Stagger the animation for each bar */
+.core-waveform span:nth-child(1) { animation-delay: 0s; }
+.core-waveform span:nth-child(2) { animation-delay: 0.2s; }
+.core-waveform span:nth-child(3) { animation-delay: 0.4s; }
+.core-waveform span:nth-child(4) { animation-delay: 0.6s; }
+.core-waveform span:nth-child(5) { animation-delay: 0.8s; }
+
+
+/* --- Orb Core (Common Element) --- */
 .orb-core {
     position: absolute;
     top: 50%; left: 50%;
     width: 8px; height: 8px;
     margin: -4px 0 0 -4px;
     border-radius: 70%;
-    background: #ffffff42;
-    box-shadow: 0 0 15px 3px var(--active-glow-color);
-    z-index: 3;
+    background: #ffffff42; /* Keep this specific color */
+    box-shadow: 0 0 15px 3px var(--active-glow-color); /* Use active glow color */
+    z-index: 3; /* Above other orb elements */
 }
 
-/* --- Smooth Waveform (Replaces core-waveform) --- */
-.waveform {
-    width: 90%;
-    height: 40px;
-    margin-top: 10px;
-    overflow: hidden;
-    position: relative;
-}
-
-.waveform svg {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.wave {
-    stroke: var(--active-glow-color);
-    stroke-width: 2;
-    fill: none;
-    opacity: 0.6;
-    transition: stroke-opacity 0.3s ease;
-}
-
-/* Fade in when listening */
-.orb--listening ~ .subtitle-container .waveform .wave {
-    stroke-opacity: 0.9;
-}
-
-.waveform {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.orb--listening ~ .subtitle-container .waveform {
-    opacity: 1;
-}
 
 /* --- Text Displays --- */
 .subtitle-container {
@@ -313,15 +310,18 @@ html, body {
 
 .instructions {
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.7); /* Keep this specific */
     text-align: center;
     margin-top: 1rem;
     font-style: italic;
 }
 
+
 /* ----------------------------------
    KEYFRAMES
    ---------------------------------- */
+
+/* --- Base/Idle Keyframes (Executive Flame Style) --- */
 @keyframes breathe {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.02); }
@@ -337,6 +337,7 @@ html, body {
     to   { transform: rotate(90deg) scale(1.05); box-shadow: 0 0 40px -10px var(--active-glow-color); }
 }
 
+/* --- State-Specific Keyframes --- */
 @keyframes speak-pulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.5); }
@@ -347,13 +348,14 @@ html, body {
     to   { transform: rotate(360deg); }
 }
 
+/* --- Phase 1-A.2 Keyframes --- */
 @keyframes glowPulse {
     0%, 100% {
         box-shadow: 0 0 40px 15px var(--active-glow-outer-color-1), 0 0 80px 40px var(--active-glow-outer-color-2);
         opacity: 1;
     }
     50% {
-        box-shadow: 0 0 50px 20px var(--active-glow-outer-color-1), 0 0 90px 45px var(--active-glow-outer-color-2);
+        box-shadow: 0 0 50px 20px rgba(43, 208, 255, 0.35), 0 0 90px 45px rgba(127, 0, 255, 0.35); /* Hardcoded intermediate for effect */
         opacity: 0.8;
     }
 }
@@ -369,32 +371,50 @@ html, body {
     }
 }
 
-/* --- Listening Deformation --- */
-.orb--listening {
-  clip-path: path('M50,0 C77.6,0 100,22.4 100,50 C100,77.6 77.6,100 50,100 C22.4,100 0,77.6 0,50 C0,22.4 22.4,0 50,0');
-  transform: scaleY(0.97) scaleX(1.03);
+@keyframes waveform {
+    from {
+        height: 5%;
+        opacity: 0.4;
+    }
+    to {
+        height: 95%;
+        opacity: 0.9;
+    }
 }
 
-/* --- State-Specific Styling --- */
+
+/* ----------------------------------
+   STATE-SPECIFIC STYLING (Executive Flame Base)
+   ---------------------------------- */
+
+/* Stop idle animations when any other state is active */
 .orb--listening, .orb--thinking, .orb--speaking, .orb--loading {
-    animation: none;
+    animation: none; /* Stop the idle 'breathe' animation */
 }
 .orb--listening::after, .orb--thinking::after, .orb--speaking::after, .orb--loading::after {
-    animation: none;
+    animation: none; /* Stop the idle 'sonar-ripple' animation */
 }
 
+/* LISTENING (Executive Flame Style) */
+.orb--listening {
+    animation: breathe 2s ease-in-out infinite; /* Faster breathing */
+    background: radial-gradient(circle at 60% 30%, var(--active-orb-bg-light), var(--active-orb-bg-dark) 80%);
+    box-shadow: inset 0 0 50px 10px #000, 0 0 15px 2px var(--active-glow-color);
+}
 .orb--listening::after {
-    animation: sonar-ripple 1.5s ease-out infinite;
-    opacity: 0.5;
+    animation: sonar-ripple 1.5s ease-out infinite; /* Faster ripple */
+    opacity: 0.5; /* Make ripple visible */
 }
 
+/* THINKING (Executive Flame Style) */
 .orb--thinking .loading-ring {
     opacity: 1;
     animation: loading-spin 1.5s linear infinite;
 }
 
+/* SPEAKING (Executive Flame Style) */
 .orb--speaking {
-    animation: breathe 1s ease-in-out infinite;
+    animation: breathe 1s ease-in-out infinite; /* Faster, more intense pulse */
     box-shadow: inset 0 0 50px 10px #000, 0 0 20px 5px var(--active-glow-color);
 }
 
@@ -402,30 +422,40 @@ html, body {
     animation: speak-pulse 0.5s ease-in-out infinite;
 }
 
+/* LOADING (Executive Flame Style - retained) */
 .orb--loading .loading-ring {
     opacity: 1;
     animation: loading-spin 1s linear infinite;
 }
 
+
 /* ----------------------------------
-   SWITCHING TO PHASE 1-A.2 VISUAL STYLE
+   SWITCHING TO PHASE 1-A.2 VISUAL STYLE (Optional Enhancement)
+   This would be triggered by adding a class like 'theme-phase1a2' to the body or orb.
+   Example: body.theme-phase1a2 .orb { ... }
    ---------------------------------- */
+
+/* Apply Phase 1-A.2 base style */
 .theme-phase1a2 .orb {
+    /* Override Executive Flame background and boxShadow */
     background: radial-gradient(circle, var(--active-orb-gradient-start), var(--active-orb-gradient-end));
-    box-shadow: none;
+    box-shadow: none; /* Remove original boxShadow */
+
+    /* Show Phase 1-A.2 elements */
     animation: idleBreathing 4s ease-in-out infinite;
 }
 
 .theme-phase1a2 .inner-glow,
 .theme-phase1a2 .outer-glow,
 .theme-phase1a2 .ripple {
-    opacity: 1;
+    opacity: 1; /* Make Phase 1-A.2 elements visible */
 }
 
-.theme-phase1a2 .waveform {
-    opacity: 1;
+.theme-phase1a2 .core-waveform {
+    opacity: 1; /* Show waveform */
 }
 
+/* Hide Executive Flame specific elements when Phase 1-A.2 is active */
 .theme-phase1a2 .orb::before,
 .theme-phase1a2 .orb::after,
 .theme-phase1a2 .heat-haze {
@@ -433,31 +463,36 @@ html, body {
     animation: none;
 }
 
+/* State adaptations for Phase 1-A.2 Theme */
 .theme-phase1a2 .orb--listening {
     animation: idleBreathing 2s ease-in-out infinite;
     box-shadow: none;
+    /* Enhance glow or ripple if desired */
+    /* .outer-glow or .ripple animation could be adjusted */
 }
-
 .theme-phase1a2 .orb--thinking .loading-ring {
-    border-top-color: var(--active-glow-color);
+    /* Keep loading ring, or perhaps enhance outer glow? */
+    border-top-color: var(--active-glow-color); /* Use active color */
 }
-
 .theme-phase1a2 .orb--speaking {
     animation: idleBreathing 1s ease-in-out infinite;
+    /* Enhance glow or waveform? */
+    /* .outer-glow animation or .core-waveform intensity could be adjusted */
 }
-
 .theme-phase1a2 .orb--speaking .orb-core {
      animation: speak-pulse 0.5s ease-in-out infinite;
 }
-
 .theme-phase1a2 .orb--loading .loading-ring {
-    border-top-color: var(--active-glow-color);
+    /* Keep loading ring */
+    border-top-color: var(--active-glow-color); /* Use active color */
 }
+
 
 /* ----------------------------------
    RESPONSIVENESS
    ---------------------------------- */
 @media (max-width: 768px) {
+    /* Adjust orb size for mobile - use style.css values */
     .orb {
         width: 45vw;
         height: 45vw;
@@ -465,6 +500,7 @@ html, body {
         min-height: 220px;
     }
 
+    /* Adjust header/footer padding for mobile - use style.css values */
     .novera-header {
         top: 1.5rem;
         left: 1.5rem;
@@ -475,32 +511,36 @@ html, body {
         right: 1.5rem;
     }
 
+    /* Adjust font sizes for mobile - use style.css values */
     .novera-header h1 {
         font-size: 1.2rem;
     }
 
     .subtitle {
-        font-size: 0.9rem;
+        font-size: 0.9rem; /* Slightly smaller on mobile */
     }
 
     .transcription {
-        font-size: 0.8rem;
+        font-size: 0.8rem; /* Slightly smaller on mobile */
     }
 
     .instructions {
-        font-size: 0.75rem;
+        font-size: 0.75rem; /* Slightly smaller on mobile */
     }
 
+    /* Adjust desktop pointer events for mobile - use style.css logic */
     .orb {
-        pointer-events: auto;
-        cursor: pointer;
+        pointer-events: auto; /* Override desktop style */
+        cursor: pointer; /* Override desktop style */
     }
 }
 
+/* Desktop-specific adjustments (if needed beyond mobile defaults) */
 @media (min-width: 769px) {
+    /* Re-apply desktop pointer events if different from mobile defaults */
     .orb {
-        pointer-events: none;
-        cursor: default;
+        pointer-events: none; /* As per original style.css */
+        cursor: default; /* As per original style.css */
     }
 }
 
@@ -510,6 +550,7 @@ html, body {
   transition: opacity 1.5s ease;
 }
 
+/* --- Phase 1-A.2 Keyframe (renamed from idleBreathing to avoid conflict) --- */
 @keyframes idleBreathing {
     0%, 100% {
         transform: scale(1);
