@@ -1,27 +1,14 @@
-/**
- * Novera - Final Core
- * Powered by Groq (llama-3.1-8b-instant)
- * Key obfuscated via split (3 parts)
- * No CORS. No Proxy. No Bullshit.
- */
-
-// --- Obfuscated Groq Key (Split into 3) ---
-const k1 = 'gsk_v3Q4dF2yjuSNa0eMrgxd';
-const k2 = 'WGdyb3FYjsCZbeVmijMHkQUP';
-const k3 = 'wt62zv2A';
-const GROQ_KEY = `${k1}${k2}${k3}`;
-
 const CONFIG = {
   API_KEYS: {
-    DEEPGRAM: "72bdc80654e54efc8b97dbf7f5cf8707ee1baef4"
-    // Groq key built at runtime
+    DEEPGRAM: "72bdc80654e54efc8b97dbf7f5cf8707ee1baef4",
+    QWEN: "sk-59ed0f89501a44e295baa83a1f520406"
   },
   API_ENDPOINTS: {
-    GROQ_CHAT: 'https://api.groq.com/openai/v1/chat/completions',
+    QWEN_CHAT: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
-  AI_MODEL: 'llama-3.1-8b-instant',
-  AI_SYSTEM_PROMPT: 'You are Novera, an AI assistant. Respond concisely and clearly.',
+  AI_MODEL: 'qwen-flash',
+  AI_SYSTEM_PROMPT: 'You are Novera, an AI assistant. Respond concisely and clearly. You are also emotionally intelligent.',
   MAX_TOKENS: 300,
   UI: {
     IDLE_TIMEOUT_MS: 3000,
@@ -169,13 +156,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- Groq (Split Key) ---
+  // --- Qwen (DashScope OpenAI-compatible) ---
   async function getAIResponse(messages) {
     try {
-      const response = await fetch(CONFIG.API_ENDPOINTS.GROQ_CHAT, {
+      const response = await fetch(CONFIG.API_ENDPOINTS.QWEN_CHAT, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${GROQ_KEY}`,
+          'Authorization': `Bearer ${CONFIG.API_KEYS.QWEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -191,13 +178,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Groq error (${response.status}): ${errorText}`);
+        throw new Error(`Qwen error (${response.status}): ${errorText}`);
       }
 
       const data = await response.json();
       return data.choices?.[0]?.message?.content?.trim() || 'I understand.';
     } catch (err) {
-      console.error('Groq call failed:', err);
+      console.error('Qwen call failed:', err);
       throw err;
     }
   }
