@@ -8,7 +8,16 @@ const CONFIG = {
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
   AI_MODEL: 'qwen-flash',
-  AI_SYSTEM_PROMPT: 'You are Novera, an AI assistant. Respond concisely and clearly. You are also emotionally intelligent.',
+  AI_SYSTEM_PROMPT: `
+You are Novera, an advanced AI assistant with personality:
+- Be concise but warm and engaging
+- Show emotional intelligence and empathy. No emojis
+- Keep responses under 30 words. hard cap is 50
+- Do not overshare
+- Remember context from previous messages
+- Use natural language, avoid robotic responses
+- If you don't know something, admit it honestly
+`,
   MAX_TOKENS: 300,
   UI: {
     IDLE_TIMEOUT_MS: 3000,
@@ -42,6 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let audioStream = null;
   let isProcessing = false;
   let conversationHistory = [];
+  let previousVol = 0;
+  let silenceTimer = null;
+  const SILENCE_THRESHOLD = 2000;
 
   // --- State Management ---
   function setOrbState(newState) {
@@ -93,6 +105,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     recognition.onstart = () => {
       setOrbState(STATES.LISTENING);
       DOM_ELEMENTS.transcriptionDisplay.textContent = '';
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+    };
+
+    recognition.onspeechstart = () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+    };
+
+    recognition.onspeechend = () => {
+      silenceTimer = setTimeout(() => {
+        if (currentState === STATES.LISTENING) {
+          stopListening();
+        }
+      }, SILENCE_THRESHOLD);
     };
 
     recognition.onresult = (event) => {
@@ -112,6 +143,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     recognition.onend = () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+      
       if (currentState === STATES.LISTENING) {
         setTimeout(() => {
           const transcript = DOM_ELEMENTS.transcriptionDisplay.textContent.trim();
@@ -137,14 +173,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isProcessing) return;
     isProcessing = true;
 
-    conversationHistory.push({ role: 'user', content: transcript });
+    // Limit conversation history
+    addToConversationHistory({ role: 'user', content: transcript });
 
     try {
       setOrbState(STATES.THINKING);
-      const aiText = await getAIResponse(conversationHistory);
+      const aiText = await getAIResponseWithRetry(conversationHistory);
       if (!aiText) throw new Error('Empty response');
 
-      conversationHistory.push({ role: 'assistant', content: aiText });
+      addToConversationHistory({ role: 'assistant', content: aiText });
 
       const audioBlob = await fetchAIAudio(aiText);
       if (!audioBlob) throw new Error('TTS failed');
@@ -153,6 +190,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (err) {
       handleError('AI response failed.');
       isProcessing = false;
+    }
+  }
+
+  // Limit conversation history to prevent token overflow
+  function addToConversationHistory(message) {
+    conversationHistory.push(message);
+    // Keep only last 10 messages to prevent token limit issues
+    if (conversationHistory.length > 10) {
+      conversationHistory = conversationHistory.slice(-10);
+    }
+  }
+
+  // Enhanced AI response with retry logic
+  async function getAIResponseWithRetry(messages, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await getAIResponse(messages);
+      } catch (err) {
+        if (i === maxRetries - 1) throw err;
+        console.warn(`AI call failed, retry ${i + 1}/${maxRetries}`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      }
     }
   }
 
@@ -284,6 +343,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function connectMicrophoneForVisualization() {
     try {
+      // Cancel any existing animation frame
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
       if (!audioStream) await initMicrophone();
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -305,6 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getVolume() {
+    if (!analyser || !dataArray) return 0;
     analyser.getByteFrequencyData(dataArray);
     const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
     return Math.pow(volume / 255, 2);
@@ -312,19 +377,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateWave() {
     if (!isAudioVisualizing) return;
+    if (!svgPath) return; // Safety check
 
     const vol = getVolume();
+    
+    // Smoother volume scaling
+    const smoothedVol = vol * 0.7 + (previousVol || 0) * 0.3;
+    previousVol = smoothedVol;
+    
     const width = 300, height = 100, centerY = height / 2;
-    const amplitude = vol * 30;
-    const c1x = width * 0.25, c2x = width * 0.75;
-    const c1y = centerY + Math.sin(vol * Math.PI) * amplitude * 1.5;
-    const c2y = centerY - Math.sin(vol * Math.PI) * amplitude * 1.5;
+    const amplitude = smoothedVol * 35;
+    
+    // More dynamic waveform
+    const time = Date.now() * 0.001;
+    const c1x = width * 0.25;
+    const c2x = width * 0.75;
+    const c1y = centerY + Math.sin(time + smoothedVol * Math.PI) * amplitude * 1.5;
+    const c2y = centerY - Math.sin(time * 1.3 + smoothedVol * Math.PI) * amplitude * 1.5;
 
     const d = `M0,${centerY} C${c1x},${c1y} ${c2x},${c2y} ${width},${centerY}`;
     svgPath.setAttribute('d', d);
 
-    DOM_ELEMENTS.orb.style.transform = `scale(${1 + vol * 0.03})`;
-    DOM_ELEMENTS.orb.style.filter = `brightness(${1 + vol * 0.15})`;
+    // Enhanced orb effects
+    const scale = 1 + smoothedVol * 0.05;
+    const brightness = 1 + smoothedVol * 0.25;
+    DOM_ELEMENTS.orb.style.transform = `scale(${scale})`;
+    DOM_ELEMENTS.orb.style.filter = `brightness(${brightness})`;
 
     animationFrameId = requestAnimationFrame(updateWave);
   }
@@ -342,6 +420,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function stopListening() {
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+    
     if (recognition && currentState === STATES.LISTENING) {
       recognition.stop();
     }
