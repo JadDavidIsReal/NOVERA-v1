@@ -53,6 +53,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let previousVol = 0;
   let silenceTimer = null;
   const SILENCE_THRESHOLD = 2000;
+  let isButtonHeld = false; // Track if button is being held
+  let accumulatedTranscript = ''; // Store all recognized text
+  let restartTimer = null; // Timer for restarting recognition
 
   // --- State Management ---
   function setOrbState(newState) {
@@ -97,13 +100,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true; // Enable interim results
+    recognition.continuous = true; // Keep listening continuously
+    recognition.interimResults = true;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setOrbState(STATES.LISTENING);
-      DOM_ELEMENTS.transcriptionDisplay.textContent = '';
+      DOM_ELEMENTS.transcriptionDisplay.textContent = accumulatedTranscript;
       DOM_ELEMENTS.subtitle.textContent = 'Listening...';
       DOM_ELEMENTS.subtitle.classList.add('visible');
       if (silenceTimer) {
@@ -120,11 +123,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     recognition.onspeechend = () => {
-      silenceTimer = setTimeout(() => {
-        if (currentState === STATES.LISTENING) {
-          stopListening();
-        }
-      }, SILENCE_THRESHOLD);
+      // Only set silence timer if button is not held
+      if (!isButtonHeld) {
+        silenceTimer = setTimeout(() => {
+          if (currentState === STATES.LISTENING) {
+            stopListening();
+          }
+        }, SILENCE_THRESHOLD);
+      }
     };
 
     recognition.onresult = (event) => {
@@ -140,45 +146,86 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
       
-      // Display interim results in subtitle (live)
-      if (interimTranscript) {
-        DOM_ELEMENTS.subtitle.textContent = interimTranscript;
-        DOM_ELEMENTS.subtitle.classList.add('visible');
+      // Accumulate final transcripts
+      if (finalTranscript) {
+        accumulatedTranscript += finalTranscript;
+        DOM_ELEMENTS.transcriptionDisplay.textContent = accumulatedTranscript.trim();
       }
       
-      // Display final results in transcription display
-      if (finalTranscript) {
-        DOM_ELEMENTS.transcriptionDisplay.textContent = finalTranscript.trim();
+      // Display interim results in subtitle (live)
+      if (interimTranscript) {
+        DOM_ELEMENTS.subtitle.textContent = accumulatedTranscript + interimTranscript;
+        DOM_ELEMENTS.subtitle.classList.add('visible');
+      } else if (finalTranscript) {
+        // If we have final transcript but no interim, show accumulated text
+        DOM_ELEMENTS.subtitle.textContent = accumulatedTranscript;
+        DOM_ELEMENTS.subtitle.classList.add('visible');
       }
     };
 
     recognition.onerror = (event) => {
-      if (event.error !== 'no-speech') {
+      console.warn('Speech recognition error:', event.error);
+      // Restart recognition if button is still held
+      if (isButtonHeld && currentState === STATES.LISTENING) {
+        restartRecognition();
+      } else if (event.error !== 'no-speech') {
         handleError('Speech failed.');
       }
     };
 
     recognition.onend = () => {
-      if (silenceTimer) {
-        clearTimeout(silenceTimer);
-        silenceTimer = null;
-      }
-      
-      if (currentState === STATES.LISTENING) {
-        setTimeout(() => {
-          const transcript = DOM_ELEMENTS.transcriptionDisplay.textContent.trim();
-          if (transcript) processUserInput(transcript);
-          else setOrbState(STATES.IDLE);
-        }, 100);
+      // If button is still held, restart recognition
+      if (isButtonHeld && currentState === STATES.LISTENING) {
+        restartRecognition();
+      } else {
+        // Normal end - process the accumulated transcript
+        if (silenceTimer) {
+          clearTimeout(silenceTimer);
+          silenceTimer = null;
+        }
+        
+        if (currentState === STATES.LISTENING) {
+          setTimeout(() => {
+            const transcript = accumulatedTranscript.trim();
+            if (transcript) processUserInput(transcript);
+            else setOrbState(STATES.IDLE);
+          }, 100);
+        }
       }
     };
   }
 
+  // Restart speech recognition
+  function restartRecognition() {
+    if (restartTimer) {
+      clearTimeout(restartTimer);
+    }
+    
+    restartTimer = setTimeout(() => {
+      if (isButtonHeld && currentState === STATES.LISTENING && recognition) {
+        try {
+          recognition.start();
+        } catch (err) {
+          console.warn('Failed to restart recognition:', err);
+          // Try again in a bit
+          setTimeout(() => {
+            if (isButtonHeld && currentState === STATES.LISTENING) {
+              restartRecognition();
+            }
+          }, 500);
+        }
+      }
+    }, 100);
+  }
+
   // --- Centralized Error Handling ---
   function handleError(message) {
+    isButtonHeld = false; // Reset button state on error
     setOrbState(STATES.ERROR);
     DOM_ELEMENTS.subtitle.textContent = message;
     DOM_ELEMENTS.transcriptionDisplay.textContent = '';
+    accumulatedTranscript = '';
+    
     setTimeout(() => {
       if (currentState === STATES.ERROR) setOrbState(STATES.IDLE);
     }, CONFIG.UI.IDLE_TIMEOUT_MS);
@@ -188,6 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function processUserInput(transcript) {
     if (isProcessing) return;
     isProcessing = true;
+    accumulatedTranscript = ''; // Reset for next conversation
 
     // Limit conversation history
     addToConversationHistory({ role: 'user', content: transcript });
@@ -425,24 +473,62 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Input Handlers ---
   function startListening() {
+    isButtonHeld = true; // Mark button as held
+    accumulatedTranscript = ''; // Reset transcript for new session
+    
     if (!isAudioVisualizing) connectMicrophoneForVisualization();
     if (currentState === STATES.IDLE && recognition && audioStream) {
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (err) {
+        console.warn('Recognition start failed:', err);
+        // Try to restart
+        recognition.stop();
+        setTimeout(() => {
+          if (isButtonHeld && currentState === STATES.IDLE) {
+            try {
+              recognition.start();
+            } catch (err2) {
+              handleError("Speech recognition failed to start.");
+            }
+          }
+        }, 100);
+      }
     } else if (currentState === STATES.IDLE) {
       initMicrophone().then(setupSpeechRecognition).then(() => {
-        if (currentState === STATES.IDLE) recognition.start();
+        if (isButtonHeld && currentState === STATES.IDLE) {
+          try {
+            recognition.start();
+          } catch (err) {
+            handleError("Speech recognition failed to start.");
+          }
+        }
       }).catch(() => handleError("Init failed."));
+    } else if (currentState === STATES.LISTENING) {
+      // Already listening, just mark button as held
+      console.log('Already listening, button held');
     }
   }
 
   function stopListening() {
+    isButtonHeld = false; // Mark button as released
+    
     if (silenceTimer) {
       clearTimeout(silenceTimer);
       silenceTimer = null;
     }
     
+    if (restartTimer) {
+      clearTimeout(restartTimer);
+      restartTimer = null;
+    }
+    
     if (recognition && currentState === STATES.LISTENING) {
-      recognition.stop();
+      try {
+        recognition.stop();
+      } catch (err) {
+        console.warn('Error stopping recognition:', err);
+      }
     }
   }
 
@@ -453,13 +539,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --- Event Listeners ---
   if (!isMobile()) {
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && currentState === STATES.IDLE) {
+      if (e.code === 'Space' && (currentState === STATES.IDLE || currentState === STATES.LISTENING)) {
         e.preventDefault();
         startListening();
       }
     });
     window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' && currentState === STATES.LISTENING) {
+      if (e.code === 'Space') {
         e.preventDefault();
         stopListening();
       }
@@ -473,10 +559,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     const cancel = (e) => {
       clearTimeout(pressTimer);
-      if (currentState === STATES.LISTENING) {
-        e.preventDefault();
-        stopListening();
-      }
+      e.preventDefault();
+      stopListening();
     };
     DOM_ELEMENTS.orb.addEventListener('touchend', cancel);
     DOM_ELEMENTS.orb.addEventListener('touchcancel', cancel);
