@@ -16,7 +16,6 @@ You are Novera, an advanced AI assistant with personality:
 - Do not overshare
 - Remember context from previous messages
 - Use natural language, avoid robotic responses
-- If you don't know something, admit it honestly
 `,
   MAX_TOKENS: 300,
   UI: {
@@ -99,12 +98,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.interimResults = true;
+    recognition.interimResults = true; // Enable interim results
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
       setOrbState(STATES.LISTENING);
       DOM_ELEMENTS.transcriptionDisplay.textContent = '';
+      DOM_ELEMENTS.subtitle.textContent = 'Listening...';
+      DOM_ELEMENTS.subtitle.classList.add('visible');
       if (silenceTimer) {
         clearTimeout(silenceTimer);
         silenceTimer = null;
@@ -127,13 +128,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     recognition.onresult = (event) => {
-      let transcript = '';
+      let interimTranscript = '';
+      let finalTranscript = '';
+      
       for (let i = 0; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          transcript += event.results[i][0].transcript + ' ';
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
         }
       }
-      DOM_ELEMENTS.transcriptionDisplay.textContent = transcript.trim();
+      
+      // Display interim results in subtitle (live)
+      if (interimTranscript) {
+        DOM_ELEMENTS.subtitle.textContent = interimTranscript;
+        DOM_ELEMENTS.subtitle.classList.add('visible');
+      }
+      
+      // Display final results in transcription display
+      if (finalTranscript) {
+        DOM_ELEMENTS.transcriptionDisplay.textContent = finalTranscript.trim();
+      }
     };
 
     recognition.onerror = (event) => {
