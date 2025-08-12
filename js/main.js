@@ -57,6 +57,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let accumulatedTranscript = ''; // Store all recognized text
   let restartTimer = null; // Timer for restarting recognition
 
+  // Mobile touch cancel threshold and tracking
+  const MOVE_CANCEL_THRESHOLD = 30; // pixels
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchMovedOut = false;
+
   // --- State Management ---
   function setOrbState(newState) {
     if (currentState === newState) return;
@@ -165,6 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     recognition.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
+      console.error('Recognition error details:', event);
       // Restart recognition if button is still held
       if (isButtonHeld && currentState === STATES.LISTENING) {
         restartRecognition();
@@ -252,7 +259,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       await playAIAudioResponse(aiText, audioBlob);
     } catch (err) {
+      console.error('processUserInput error:', err);
       handleError('AI response failed.');
+    } finally {
+      // Ensure processing flag is cleared in all cases to avoid blocking subsequent interactions
       isProcessing = false;
     }
   }
@@ -552,19 +562,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     DOM_ELEMENTS.orb.style.pointerEvents = 'none';
   } else {
-    let pressTimer;
+    // Mobile: start listening immediately on touchstart (no delay).
     DOM_ELEMENTS.orb.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      pressTimer = setTimeout(startListening, 200);
+      touchMovedOut = false;
+      if (e.touches && e.touches[0]) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      } else {
+        touchStartX = 0;
+        touchStartY = 0;
+      }
+      startListening();
     });
-    const cancel = (e) => {
-      clearTimeout(pressTimer);
+
+    // On touchmove, only cancel if the move is intentionally large (beyond threshold).
+    DOM_ELEMENTS.orb.addEventListener('touchmove', (e) => {
+      if (!e.touches || !e.touches[0]) return;
+      const dx = e.touches[0].clientX - touchStartX;
+      const dy = e.touches[0].clientY - touchStartY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > MOVE_CANCEL_THRESHOLD && !touchMovedOut) {
+        touchMovedOut = true;
+        // Intentional cancel: stop listening
+        console.log('Touch moved out (cancel) by', Math.round(dist), 'px — cancelling input.');
+        stopListening();
+      }
+    });
+
+    // On touchend/cancel we stop listening normally (if not already canceled by move).
+    const mobileTouchEnd = (e) => {
       e.preventDefault();
-      stopListening();
+      if (!touchMovedOut) {
+        // Normal release — end listening and allow processing of whatever was captured.
+        stopListening();
+      } else {
+        // Already canceled via touchmove — ensure state is clean.
+        stopListening();
+      }
     };
-    DOM_ELEMENTS.orb.addEventListener('touchend', cancel);
-    DOM_ELEMENTS.orb.addEventListener('touchcancel', cancel);
-    DOM_ELEMENTS.orb.addEventListener('touchmove', cancel);
+
+    DOM_ELEMENTS.orb.addEventListener('touchend', mobileTouchEnd);
+    DOM_ELEMENTS.orb.addEventListener('touchcancel', mobileTouchEnd);
   }
 
   // --- Init ---
