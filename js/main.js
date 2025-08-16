@@ -24,6 +24,7 @@ You are Novera, an advanced AI assistant with personality:
   }
 };
 
+
 document.addEventListener('DOMContentLoaded', async () => {
   const DOM_ELEMENTS = {
     orb: document.querySelector('.orb'),
