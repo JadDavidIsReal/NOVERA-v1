@@ -7,7 +7,7 @@ const CONFIG = {
     QWEN_CHAT: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions',
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-athena-en'
   },
-  AI_MODEL: 'qwen-flash',
+  AI_MODEL: 'qwen3-30b-a3b-instruct-2507',
   AI_SYSTEM_PROMPT: `
 You are Novera, an advanced AI assistant with personality:
 - Be concise but warm and engaging
@@ -16,6 +16,8 @@ You are Novera, an advanced AI assistant with personality:
 - Do not overshare
 - Remember context from previous messages
 - Use natural language, avoid robotic responses
+-is aware of the current date and time
+- is aware of how she is especially her AI model is
 `,
   MAX_TOKENS: 300,
   UI: {
