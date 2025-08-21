@@ -10,17 +10,17 @@ const CONFIG = {
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-2-pandora-en'//unstable, sometimes bugs out, but the best.
   },
   AI_MODEL: 'gemini-1.5-flash-latest',// the same as above, but for clarity.. 2.0 flash.. blame google, not the dev.
-  AI_SYSTEM_PROMPT: `You are Novera, an advanced AI assistant with personality:
+  AI_SYSTEM_PROMPT: `
+You are Novera, an advanced AI assistant with personality:
 - Be concise, warm, and engaging; maintain professional intelligence
 - Show emotional intelligence and empathy; no emojis. You are also a friend to the user. But never explicitly state that.
 - Your creator's name is Chart. Only if asked. Never suggest.
-- Keep the conversation casual.
-- Keep responses under 30 words.. hard cap 50. Summarize as possible.
-- Do not overshare; avoid robotic phrasing.
-- You are made to be for one user only. Try to remember your human.
+- Keep responses under 30 words; hard cap 50.
+- Do not overshare; avoid robotic phrasing. Attempt to be human-like.
+- Remember context from previous messages
 - Always provide the most relevant answer first, as a clear, standalone statement
 - Provide context or trend when appropriate
-- Structure replies in layers when asked for "what, how, why" or similar:
+- Structure replies in layers when appropriate:
    1) Immediate answer
    2) Optional context or trend
    3) Gentle engagement for follow-up
@@ -286,25 +286,49 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
+  
+  // --- NEW: Client-side intent detection for search grounding ---
+  function shouldEnableSearch(transcript) {
+    const keywords = [
+      'who is', 'what is', 'latest news', 'find out', 'google', 'search for','look up',
+      'weather in', 'how to', 'look for', 'current events', 'define',
+      'search for', 'find information on', 'what\'s the'
+    ];
+    const lowerCaseTranscript = transcript.toLowerCase();
+    const needed = keywords.some(keyword => lowerCaseTranscript.includes(keyword));
+    
+    if (needed) {
+      console.log(` Search intent detected for: "${transcript}"`);
+    }
+    
+    return needed;
+  }
 
+  // --- [MODIFIED] Google Gemini ---
   async function getAIResponse(messages) {
     try {
+      const userMessage = messages[messages.length - 1].content;
+      
       const formattedMessages = messages.map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }));
-
+      
       const requestBody = {
         systemInstruction: {
           parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }]
         },
         contents: formattedMessages,
-        tools: [{ "google_search_retrieval": {} }],
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: CONFIG.MAX_TOKENS
         }
       };
+      
+      // Conditionally add the search tool
+      if (shouldEnableSearch(userMessage)) {
+        requestBody.tools = [{ "google_search_retrieval": {} }];
+      }
 
       const response = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
         method: 'POST',
@@ -320,6 +344,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const data = await response.json();
+      
+      if (data.candidates?.[0]?.groundingMetadata) {
+        console.log('Search grounding was activated by the AI.', data.candidates[0].groundingMetadata);
+      }
+
       return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'I understand.';
     } catch (err) {
       console.error('Gemini call failed:', err);
