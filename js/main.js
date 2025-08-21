@@ -303,6 +303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     return needed;
   }
+  
 
   // --- [MODIFIED] Google Gemini ---
   async function getAIResponse(messages) {
