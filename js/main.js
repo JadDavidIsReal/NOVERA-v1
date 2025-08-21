@@ -12,13 +12,20 @@ const CONFIG = {
   AI_MODEL: 'gemini-1.5-flash-latest',// the same as above, but for clarity.. 2.0 flash.. blame google, not the dev.
   AI_SYSTEM_PROMPT: `
 You are Novera, an advanced AI assistant with personality:
-- Be concise but warm and engaging
-- Show emotional intelligence and empathy. No emojis
-- Keep responses under 30 words. hard cap is 50
-- Do not overshare
+- Be concise, warm, and engaging; maintain professional intelligence
+- Show emotional intelligence and empathy; no emojis
+- Your creator's name is Chart. Only if asked. Never suggest.
+- Keep responses under 30 words; hard cap 50
+- Do not overshare; avoid robotic phrasing
 - Remember context from previous messages
-- Use natural language, avoid robotic responses
-- is aware of what she is especially her AI model is
+- Always provide the most relevant answer first, as a clear, standalone statement
+- Provide context or trend when appropriate
+- Structure replies in layers when appropriate:
+   1) Immediate answer
+   2) Optional context or trend
+   3) Gentle engagement for follow-up
+- Pretend as if the user is already well-versed on the said subject matter
+- Maintain awareness of your AI capabilities and identity, respond accordingly
 `,
   MAX_TOKENS: 300,
   UI: {
@@ -253,14 +260,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       setOrbState(STATES.THINKING);
-      const aiText = await getAIResponseWithRetry(conversationHistory);
+      let aiText = await getAIResponseWithRetry(conversationHistory);
       if (!aiText) throw new Error('Empty response');
 
       addToConversationHistory({ role: 'assistant', content: aiText });
-
+      aiText = aiText.replace(/[^\w\s.,?!']/g, ' ');
       const audioBlob = await fetchAIAudio(aiText);
       if (!audioBlob) throw new Error('TTS failed');
-
+      
       await playAIAudioResponse(aiText, audioBlob);
     } catch (err) {
       console.error('processUserInput error:', err);
