@@ -7,16 +7,16 @@ const CONFIG = {
   },
   API_ENDPOINTS: {
     GEMINI_CHAT: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent',//endpoint states "1.5 flash".. however, this is 2.0-flash. Google's API is weird
-    DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-2-pandora-en'
+    DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-2-pandora-en'//unstable, sometimes bugs out, but the best.
   },
   AI_MODEL: 'gemini-1.5-flash-latest',// the same as above, but for clarity.. 2.0 flash.. blame google, not the dev.
   AI_SYSTEM_PROMPT: `
 You are Novera, an advanced AI assistant with personality:
 - Be concise, warm, and engaging; maintain professional intelligence
-- Show emotional intelligence and empathy; no emojis
+- Show emotional intelligence and empathy; no emojis. You are also a friend to the user. But never explicitly state that.
 - Your creator's name is Chart. Only if asked. Never suggest.
-- Keep responses under 30 words; hard cap 50
-- Do not overshare; avoid robotic phrasing
+- Keep responses under 30 words; hard cap 50.
+- Do not overshare; avoid robotic phrasing. Attempt to be human-like.
 - Remember context from previous messages
 - Always provide the most relevant answer first, as a clear, standalone statement
 - Provide context or trend when appropriate
@@ -27,9 +27,9 @@ You are Novera, an advanced AI assistant with personality:
 - Pretend as if the user is already well-versed on the said subject matter
 - Maintain awareness of your AI capabilities and identity, respond accordingly
 `,
-  MAX_TOKENS: 300,
+  MAX_TOKENS: 500,
   UI: {
-    IDLE_TIMEOUT_MS: 3000,
+    IDLE_TIMEOUT_MS: 1000,
     SUBTITLE_FADEOUT_DURATION_MS: 1500
   }
 };
@@ -264,10 +264,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!aiText) throw new Error('Empty response');
 
       addToConversationHistory({ role: 'assistant', content: aiText });
-      aiText = aiText.replace(/[^\w\s.,?!']/g, ' ');
+      
+      // Sanitize text for TTS
+      //aiText = aiText.replace(/[^\w\s.,?!']/g, '');
+
       const audioBlob = await fetchAIAudio(aiText);
       if (!audioBlob) throw new Error('TTS failed');
-      
+
       await playAIAudioResponse(aiText, audioBlob);
     } catch (err) {
       console.error('processUserInput error:', err);
@@ -300,33 +303,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- [NEW] Intent Detection ---
-  function detectAndBuildTools(transcript) {
-    const lowerCaseTranscript = transcript.toLowerCase();
-    const searchKeywords = ['who is', 'what is', 'search for', 'look up', 'what\'s the latest', 'how to', 'find out'];
-    const urlRegex = /https?:\/\/[^\s]+/g;
-
-    let needsSearch = false;
-
-    // Check for keywords that imply a search is needed
-    if (searchKeywords.some(keyword => lowerCaseTranscript.includes(keyword))) {
-      needsSearch = true;
-    }
-
-    // Check for URLs to provide context
-    if (urlRegex.test(lowerCaseTranscript)) {
-      needsSearch = true;
-    }
-
-    if (needsSearch) {
-      console.log("Intent detected: Enabling Google Search grounding.");
-      // The tool for both general search and URI grounding is "google_search"
-      return [{ "google_search_retrieval": {} }];
-    }
-
-    return undefined; // Return undefined if no tools are needed
-  }
-
   // --- [MODIFIED] Google Gemini ---
   async function getAIResponse(messages) {
     try {
@@ -335,23 +311,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         parts: [{ text: msg.content }]
       }));
 
-      const latestUserMessage = messages[messages.length - 1].content;
-      const tools = detectAndBuildTools(latestUserMessage);
-
+      // AI Intent Detection replaced with automatic/Smart AI intent detection.
       const requestBody = {
         systemInstruction: {
           parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }]
         },
         contents: formattedMessages,
+        tools: [{ "google_search_retrieval": {} }],
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: CONFIG.MAX_TOKENS
         }
       };
-
-      if (tools) {
-        requestBody.tools = tools;
-      }
 
       const response = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
         method: 'POST',
