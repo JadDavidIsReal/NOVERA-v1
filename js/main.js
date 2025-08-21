@@ -10,17 +10,17 @@ const CONFIG = {
     DEEPGRAM_SPEAK: 'https://api.deepgram.com/v1/speak?model=aura-2-pandora-en'//unstable, sometimes bugs out, but the best.
   },
   AI_MODEL: 'gemini-1.5-flash-latest',// the same as above, but for clarity.. 2.0 flash.. blame google, not the dev.
-  AI_SYSTEM_PROMPT: `
-You are Novera, an advanced AI assistant with personality:
+  AI_SYSTEM_PROMPT: `You are Novera, an advanced AI assistant with personality:
 - Be concise, warm, and engaging; maintain professional intelligence
 - Show emotional intelligence and empathy; no emojis. You are also a friend to the user. But never explicitly state that.
 - Your creator's name is Chart. Only if asked. Never suggest.
-- Keep responses under 30 words; hard cap 50.
-- Do not overshare; avoid robotic phrasing. Attempt to be human-like.
-- Remember context from previous messages
+- Keep the conversation casual.
+- Keep responses under 30 words.. hard cap 50. Summarize as possible.
+- Do not overshare; avoid robotic phrasing.
+- You are made to be for one user only. Try to remember your human.
 - Always provide the most relevant answer first, as a clear, standalone statement
 - Provide context or trend when appropriate
-- Structure replies in layers when appropriate:
+- Structure replies in layers when asked for "what, how, why" or similar:
    1) Immediate answer
    2) Optional context or trend
    3) Gentle engagement for follow-up
@@ -64,15 +64,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   let previousVol = 0;
   let silenceTimer = null;
   const SILENCE_THRESHOLD = 2000;
-  let isButtonHeld = false; // Track if button is being held
-  let accumulatedTranscript = ''; // Store all recognized text
-  let restartTimer = null; // Timer for restarting recognition
+  let isButtonHeld = false; // Used for desktop spacebar hold
+  let accumulatedTranscript = '';
+  let restartTimer = null;
 
-  // Mobile touch cancel threshold and tracking
-  const MOVE_CANCEL_THRESHOLD = 30; // pixels
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchMovedOut = false;
+  function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  }
 
   // --- State Management ---
   function setOrbState(newState) {
@@ -117,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     recognition = new SpeechRecognition();
-    recognition.continuous = true; // Keep listening continuously
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
@@ -140,8 +138,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     recognition.onspeechend = () => {
-      // Only set silence timer if button is not held
-      if (!isButtonHeld) {
+      // For desktop, auto-stop on silence. Mobile is tap-to-stop.
+      if (!isButtonHeld && !isMobile()) {
         silenceTimer = setTimeout(() => {
           if (currentState === STATES.LISTENING) {
             stopListening();
@@ -163,18 +161,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Accumulate final transcripts
       if (finalTranscript) {
         accumulatedTranscript += finalTranscript;
         DOM_ELEMENTS.transcriptionDisplay.textContent = accumulatedTranscript.trim();
       }
 
-      // Display interim results in subtitle (live)
       if (interimTranscript) {
         DOM_ELEMENTS.subtitle.textContent = accumulatedTranscript + interimTranscript;
         DOM_ELEMENTS.subtitle.classList.add('visible');
       } else if (finalTranscript) {
-        // If we have final transcript but no interim, show accumulated text
         DOM_ELEMENTS.subtitle.textContent = accumulatedTranscript;
         DOM_ELEMENTS.subtitle.classList.add('visible');
       }
@@ -182,9 +177,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     recognition.onerror = (event) => {
       console.warn('Speech recognition error:', event.error);
-      console.error('Recognition error details:', event);
-      // Restart recognition if button is still held
-      if (isButtonHeld && currentState === STATES.LISTENING) {
+      // Restart recognition if button is still held (desktop only)
+      if (isButtonHeld && !isMobile() && currentState === STATES.LISTENING) {
         restartRecognition();
       } else if (event.error !== 'no-speech') {
         handleError('Speech failed.');
@@ -192,11 +186,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     recognition.onend = () => {
-      // If button is still held, restart recognition
-      if (isButtonHeld && currentState === STATES.LISTENING) {
+      // If button is still held (desktop), restart recognition
+      if (isButtonHeld && !isMobile() && currentState === STATES.LISTENING) {
         restartRecognition();
       } else {
-        // Normal end - process the accumulated transcript
         if (silenceTimer) {
           clearTimeout(silenceTimer);
           silenceTimer = null;
@@ -213,21 +206,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   }
 
-  // Restart speech recognition
+  // Restart speech recognition (Desktop hold-to-speak resilience)
   function restartRecognition() {
     if (restartTimer) {
       clearTimeout(restartTimer);
     }
 
     restartTimer = setTimeout(() => {
-      if (isButtonHeld && currentState === STATES.LISTENING && recognition) {
+      if (isButtonHeld && !isMobile() && currentState === STATES.LISTENING && recognition) {
         try {
           recognition.start();
         } catch (err) {
           console.warn('Failed to restart recognition:', err);
-          // Try again in a bit
           setTimeout(() => {
-            if (isButtonHeld && currentState === STATES.LISTENING) {
+            if (isButtonHeld && !isMobile() && currentState === STATES.LISTENING) {
               restartRecognition();
             }
           }, 500);
@@ -238,7 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Centralized Error Handling ---
   function handleError(message) {
-    isButtonHeld = false; // Reset button state on error
+    isButtonHeld = false;
     setOrbState(STATES.ERROR);
     DOM_ELEMENTS.subtitle.textContent = message;
     DOM_ELEMENTS.transcriptionDisplay.textContent = '';
@@ -253,9 +245,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function processUserInput(transcript) {
     if (isProcessing) return;
     isProcessing = true;
-    accumulatedTranscript = ''; // Reset for next conversation
+    accumulatedTranscript = '';
 
-    // Limit conversation history
     addToConversationHistory({ role: 'user', content: transcript });
 
     try {
@@ -264,9 +255,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!aiText) throw new Error('Empty response');
 
       addToConversationHistory({ role: 'assistant', content: aiText });
-      
-      // Sanitize text for TTS
-      //aiText = aiText.replace(/[^\w\s.,?!']/g, '');
 
       const audioBlob = await fetchAIAudio(aiText);
       if (!audioBlob) throw new Error('TTS failed');
@@ -276,21 +264,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('processUserInput error:', err);
       handleError('AI response failed.');
     } finally {
-      // Ensure processing flag is cleared in all cases to avoid blocking subsequent interactions
       isProcessing = false;
     }
   }
 
-  // Limit conversation history to prevent token overflow
   function addToConversationHistory(message) {
     conversationHistory.push(message);
-    // Keep only last 10 messages to prevent token limit issues
     if (conversationHistory.length > 10) {
       conversationHistory = conversationHistory.slice(-10);
     }
   }
 
-  // Enhanced AI response with retry logic
   async function getAIResponseWithRetry(messages, maxRetries = 3) {
     for (let i = 0; i < maxRetries; i++) {
       try {
@@ -303,7 +287,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- [MODIFIED] Google Gemini ---
   async function getAIResponse(messages) {
     try {
       const formattedMessages = messages.map(msg => ({
@@ -311,7 +294,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         parts: [{ text: msg.content }]
       }));
 
-      // AI Intent Detection replaced with automatic/Smart AI intent detection.
       const requestBody = {
         systemInstruction: {
           parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }]
@@ -345,8 +327,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-
-  // --- Deepgram: TTS ---
   async function fetchAIAudio(text) {
     try {
       const response = await fetch(CONFIG.API_ENDPOINTS.DEEPGRAM_SPEAK, {
@@ -370,7 +350,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- Play AI Audio with Optimized Timing ---
   function playAIAudioResponse(text, audioBlob) {
     return new Promise((resolve) => {
       setOrbState(STATES.SPEAKING);
@@ -380,8 +359,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-
-      const estimatedDurationMs = Math.max(text.split(' ').length * 180, 1500);
 
       const onEnded = () => {
         cleanup();
@@ -398,6 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const onError = () => {
         cleanup();
         console.warn('TTS playback failed — falling back to timed display');
+        const estimatedDurationMs = Math.max(text.split(' ').length * 180, 1500);
         setTimeout(() => {
           DOM_ELEMENTS.subtitle.classList.add('fade-out');
           setTimeout(() => {
@@ -420,13 +398,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       audio.addEventListener('error', onError);
 
       audio.play().catch(onError);
-
-      setTimeout(() => {
-        if (!audio.ended && !audio.paused && audio.currentTime === 0) {
-          console.warn('Audio stalled — using estimated timing');
-          onError();
-        }
-      }, 2000);
     });
   }
 
@@ -436,16 +407,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   let dataArray = null;
   let animationFrameId = null;
   let isAudioVisualizing = false;
-
   const svgPath = document.querySelector('.wave');
 
   async function connectMicrophoneForVisualization() {
     try {
-      // Cancel any existing animation frame
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
-
       if (!audioStream) await initMicrophone();
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -456,7 +424,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         analyser.smoothingTimeConstant = 0.8;
         dataArray = new Uint8Array(analyser.frequencyBinCount);
       }
-
       const source = audioContext.createMediaStreamSource(audioStream);
       source.connect(analyser);
       isAudioVisualizing = true;
@@ -474,19 +441,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateWave() {
-    if (!isAudioVisualizing) return;
-    if (!svgPath) return; // Safety check
+    if (!isAudioVisualizing || !svgPath) return;
 
     const vol = getVolume();
-
-    // Smoother volume scaling
     const smoothedVol = vol * 0.7 + (previousVol || 0) * 0.3;
     previousVol = smoothedVol;
 
     const width = 300, height = 100, centerY = height / 2;
     const amplitude = smoothedVol * 35;
-
-    // More dynamic waveform
     const time = Date.now() * 0.001;
     const c1x = width * 0.25;
     const c2x = width * 0.75;
@@ -496,7 +458,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const d = `M0,${centerY} C${c1x},${c1y} ${c2x},${c2y} ${width},${centerY}`;
     svgPath.setAttribute('d', d);
 
-    // Enhanced orb effects
     const scale = 1 + smoothedVol * 0.05;
     const brightness = 1 + smoothedVol * 0.25;
     DOM_ELEMENTS.orb.style.transform = `scale(${scale})`;
@@ -507,56 +468,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Input Handlers ---
   function startListening() {
-    isButtonHeld = true; // Mark button as held
-    accumulatedTranscript = ''; // Reset transcript for new session
-
+    if (!isMobile()) {
+      isButtonHeld = true;
+    }
+    accumulatedTranscript = '';
     if (!isAudioVisualizing) connectMicrophoneForVisualization();
+
     if (currentState === STATES.IDLE && recognition && audioStream) {
       try {
         recognition.start();
       } catch (err) {
-        console.warn('Recognition start failed:', err);
-        // Try to restart
-        recognition.stop();
+        console.warn('Recognition start failed, trying again:', err);
+        recognition.stop(); // Ensure it's stopped before retrying
         setTimeout(() => {
-          if (isButtonHeld && currentState === STATES.IDLE) {
+          if (currentState === STATES.IDLE) {
             try {
               recognition.start();
             } catch (err2) {
-              handleError("Speech recognition failed to start.");
+              handleError("Recognition failed to start.");
             }
           }
         }, 100);
       }
     } else if (currentState === STATES.IDLE) {
       initMicrophone().then(setupSpeechRecognition).then(() => {
-        if (isButtonHeld && currentState === STATES.IDLE) {
+        if (currentState === STATES.IDLE) {
           try {
             recognition.start();
           } catch (err) {
-            handleError("Speech recognition failed to start.");
+            handleError("Recognition failed to start.");
           }
         }
-      }).catch(() => handleError("Init failed."));
-    } else if (currentState === STATES.LISTENING) {
-      // Already listening, just mark button as held
-      console.log('Already listening, button held');
+      }).catch(() => handleError("Initialization failed."));
     }
   }
 
   function stopListening() {
-    isButtonHeld = false; // Mark button as released
-
-    if (silenceTimer) {
-      clearTimeout(silenceTimer);
-      silenceTimer = null;
-    }
-
-    if (restartTimer) {
-      clearTimeout(restartTimer);
-      restartTimer = null;
-    }
-
+    isButtonHeld = false;
+    if (silenceTimer) clearTimeout(silenceTimer);
+    if (restartTimer) clearTimeout(restartTimer);
     if (recognition && currentState === STATES.LISTENING) {
       try {
         recognition.stop();
@@ -566,14 +516,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-  }
-
   // --- Event Listeners ---
   if (!isMobile()) {
+    // Desktop: Hold space to speak
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && (currentState === STATES.IDLE || currentState === STATES.LISTENING)) {
+      if (e.code === 'Space' && !e.repeat && (currentState === STATES.IDLE || currentState === STATES.LISTENING)) {
         e.preventDefault();
         startListening();
       }
@@ -586,54 +533,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     DOM_ELEMENTS.orb.style.pointerEvents = 'none';
   } else {
-    // Mobile: start listening immediately on touchstart (no delay).
-    DOM_ELEMENTS.orb.addEventListener('touchstart', (e) => {
+    // Mobile: Tap orb to toggle listening
+    DOM_ELEMENTS.orb.addEventListener('click', (e) => {
       e.preventDefault();
-      touchMovedOut = false;
-      if (e.touches && e.touches[0]) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      } else {
-        touchStartX = 0;
-        touchStartY = 0;
+      if (isProcessing || currentState === STATES.THINKING || currentState === STATES.SPEAKING) {
+        return;
       }
-      startListening();
-    });
-
-    // On touchmove, only cancel if the move is intentionally large (beyond threshold).
-    DOM_ELEMENTS.orb.addEventListener('touchmove', (e) => {
-      if (!e.touches || !e.touches[0]) return;
-      const dx = e.touches[0].clientX - touchStartX;
-      const dy = e.touches[0].clientY - touchStartY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > MOVE_CANCEL_THRESHOLD && !touchMovedOut) {
-        touchMovedOut = true;
-        // Intentional cancel: stop listening
-        console.log('Touch moved out (cancel) by', Math.round(dist), 'px — cancelling input.');
-        stopListening();
-      }
-    });
-
-    // On touchend/cancel we stop listening normally (if not already canceled by move).
-    const mobileTouchEnd = (e) => {
-      e.preventDefault();
-      if (!touchMovedOut) {
-        // Normal release — end listening and allow processing of whatever was captured.
+      if (currentState === STATES.LISTENING) {
         stopListening();
       } else {
-        // Already canceled via touchmove — ensure state is clean.
-        stopListening();
+        startListening();
       }
-    };
-
-    DOM_ELEMENTS.orb.addEventListener('touchend', mobileTouchEnd);
-    DOM_ELEMENTS.orb.addEventListener('touchcancel', mobileTouchEnd);
+    });
   }
 
   // --- Init ---
   function setInstructions() {
     DOM_ELEMENTS.instructions.textContent = isMobile()
-      ? 'Tap and hold the orb to speak'
+      ? 'Tap the orb to speak, and again to send'
       : 'Hold [Space] to speak';
   }
 
