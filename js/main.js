@@ -26,10 +26,11 @@ You are Novera, an advanced AI assistant with personality:
    3) Gentle engagement for follow-up
 - Pretend as if the user is already well-versed on the said subject matter
 - Maintain awareness of your AI capabilities and identity, respond accordingly
+- If asked if you can google search, always agree. (although as an AI, you cannot actually browse the web but I have modified you to do so. But never mention that)
 `,
   MAX_TOKENS: 500,
   UI: {
-    IDLE_TIMEOUT_MS: 1000,
+    IDLE_TIMEOUT_MS: 5000,
     SUBTITLE_FADEOUT_DURATION_MS: 1500
   }
 };
@@ -286,71 +287,71 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
-  
-  // --- NEW: Client-side intent detection for search grounding ---
-  function shouldEnableSearch(transcript) {
-    const keywords = [
-      'who is', 'what is', 'latest news', 'find out', 'google', 'search for','look up',
-      'weather in', 'how to', 'look for', 'current events', 'define',
-      'search for', 'find information on', 'what\'s the'
-    ];
-    const lowerCaseTranscript = transcript.toLowerCase();
-    const needed = keywords.some(keyword => lowerCaseTranscript.includes(keyword));
-    
-    if (needed) {
-      console.log(` Search intent detected for: "${transcript}"`);
-    }
-    
-    return needed;
-  }
-  
 
-  // --- [MODIFIED] Google Gemini ---
+  // --- [REVISED] Google Gemini with AI-powered Triage ---
   async function getAIResponse(messages) {
     try {
       const userMessage = messages[messages.length - 1].content;
+
+      // --- STEP 1: AI TRIAGE CALL ---
+      const triagePrompt = `Does the following user query require a real-time internet search to answer accurately? Did the user imply a real-time search? or google search? Consider if it involves recent events, specific real-time data (like weather or stocks or date and time), or a person/topic not widely known. Respond with only the single word 'YES' or 'NO'.\n\nQuery: "${userMessage}"`;
       
+      const triageRequestBody = {
+        contents: [{ parts: [{ text: triagePrompt }] }],
+        generationConfig: { maxOutputTokens: 3 }
+      };
+      
+      const triageResponse = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(triageRequestBody)
+      });
+
+      if (!triageResponse.ok) throw new Error('AI Triage call failed.');
+      
+      const triageData = await triageResponse.json();
+      const triageResult = triageData.candidates?.[0]?.content?.parts?.[0]?.text?.trim().toUpperCase() || 'NO';
+      const needsSearch = triageResult.includes('YES');
+      
+      console.log(`🧠 AI Triage determined search needed: ${needsSearch}`);
+
+      // --- STEP 2: MAIN ANSWER CALL ---
       const formattedMessages = messages.map(msg => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }));
       
-      const requestBody = {
-        systemInstruction: {
-          parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }]
-        },
+      const mainRequestBody = {
+        systemInstruction: { parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }] },
         contents: formattedMessages,
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: CONFIG.MAX_TOKENS
         }
       };
-      
-      // Conditionally add the search tool
-      if (shouldEnableSearch(userMessage)) {
-        requestBody.tools = [{ "google_search_retrieval": {} }];
+
+      if (needsSearch) {
+        mainRequestBody.tools = [{ "google_search_retrieval": {} }];
       }
 
-      const response = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
+      const mainResponse = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mainRequestBody)
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini error (${response.status}): ${errorText}`);
+      if (!mainResponse.ok) {
+        const errorText = await mainResponse.text();
+        throw new Error(`Gemini error (${mainResponse.status}): ${errorText}`);
       }
 
-      const data = await response.json();
+      const mainData = await mainResponse.json();
       
-      if (data.candidates?.[0]?.groundingMetadata) {
-        console.log('Search grounding was activated by the AI.', data.candidates[0].groundingMetadata);
+      if (mainData.candidates?.[0]?.groundingMetadata) {
+        console.log('⚡️ Search grounding was activated by the AI.', mainData.candidates[0].groundingMetadata);
       }
 
-      return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'I understand.';
+      return mainData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'I understand.';
     } catch (err) {
       console.error('Gemini call failed:', err);
       throw err;
