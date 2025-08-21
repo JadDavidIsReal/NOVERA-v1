@@ -1,4 +1,3 @@
-
 const CONFIG = {
 
   //I intentionally, specifically, manually hardcoded these keys for dev test convenience. And I disabled github's secret detection bypassing its detection. Pls dont steal them.
@@ -147,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     recognition.onresult = (event) => {
       let interimTranscript = '';
       let finalTranscript = '';
-      
+
       for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
@@ -156,13 +155,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           interimTranscript += transcript;
         }
       }
-      
+
       // Accumulate final transcripts
       if (finalTranscript) {
         accumulatedTranscript += finalTranscript;
         DOM_ELEMENTS.transcriptionDisplay.textContent = accumulatedTranscript.trim();
       }
-      
+
       // Display interim results in subtitle (live)
       if (interimTranscript) {
         DOM_ELEMENTS.subtitle.textContent = accumulatedTranscript + interimTranscript;
@@ -195,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           clearTimeout(silenceTimer);
           silenceTimer = null;
         }
-        
+
         if (currentState === STATES.LISTENING) {
           setTimeout(() => {
             const transcript = accumulatedTranscript.trim();
@@ -212,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (restartTimer) {
       clearTimeout(restartTimer);
     }
-    
+
     restartTimer = setTimeout(() => {
       if (isButtonHeld && currentState === STATES.LISTENING && recognition) {
         try {
@@ -237,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     DOM_ELEMENTS.subtitle.textContent = message;
     DOM_ELEMENTS.transcriptionDisplay.textContent = '';
     accumulatedTranscript = '';
-    
+
     setTimeout(() => {
       if (currentState === STATES.ERROR) setOrbState(STATES.IDLE);
     }, CONFIG.UI.IDLE_TIMEOUT_MS);
@@ -294,7 +293,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- Google Gemini ---
+  // --- [NEW] Intent Detection ---
+  function detectAndBuildTools(transcript) {
+    const lowerCaseTranscript = transcript.toLowerCase();
+    const searchKeywords = ['who is', 'what is', 'search for', 'look up', 'what\'s the latest', 'how to', 'find out'];
+    const urlRegex = /https?:\/\/[^\s]+/g;
+
+    let needsSearch = false;
+
+    // Check for keywords that imply a search is needed
+    if (searchKeywords.some(keyword => lowerCaseTranscript.includes(keyword))) {
+      needsSearch = true;
+    }
+
+    // Check for URLs to provide context
+    if (urlRegex.test(lowerCaseTranscript)) {
+      needsSearch = true;
+    }
+
+    if (needsSearch) {
+      console.log("Intent detected: Enabling Google Search grounding.");
+      // The tool for both general search and URI grounding is "google_search"
+      return [{ "google_search_retrieval": {} }];
+    }
+
+    return undefined; // Return undefined if no tools are needed
+  }
+
+  // --- [MODIFIED] Google Gemini ---
   async function getAIResponse(messages) {
     try {
       const formattedMessages = messages.map(msg => ({
@@ -302,21 +328,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         parts: [{ text: msg.content }]
       }));
 
+      const latestUserMessage = messages[messages.length - 1].content;
+      const tools = detectAndBuildTools(latestUserMessage);
+
+      const requestBody = {
+        systemInstruction: {
+          parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }]
+        },
+        contents: formattedMessages,
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: CONFIG.MAX_TOKENS
+        }
+      };
+
+      if (tools) {
+        requestBody.tools = tools;
+      }
+
       const response = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: CONFIG.AI_SYSTEM_PROMPT }]
-          },
-          contents: formattedMessages,
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: CONFIG.MAX_TOKENS
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -331,6 +366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       throw err;
     }
   }
+
 
   // --- Deepgram: TTS ---
   async function fetchAIAudio(text) {
@@ -431,7 +467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
-      
+
       if (!audioStream) await initMicrophone();
       if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -464,14 +500,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!svgPath) return; // Safety check
 
     const vol = getVolume();
-    
+
     // Smoother volume scaling
     const smoothedVol = vol * 0.7 + (previousVol || 0) * 0.3;
     previousVol = smoothedVol;
-    
+
     const width = 300, height = 100, centerY = height / 2;
     const amplitude = smoothedVol * 35;
-    
+
     // More dynamic waveform
     const time = Date.now() * 0.001;
     const c1x = width * 0.25;
@@ -495,7 +531,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function startListening() {
     isButtonHeld = true; // Mark button as held
     accumulatedTranscript = ''; // Reset transcript for new session
-    
+
     if (!isAudioVisualizing) connectMicrophoneForVisualization();
     if (currentState === STATES.IDLE && recognition && audioStream) {
       try {
@@ -532,17 +568,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function stopListening() {
     isButtonHeld = false; // Mark button as released
-    
+
     if (silenceTimer) {
       clearTimeout(silenceTimer);
       silenceTimer = null;
     }
-    
+
     if (restartTimer) {
       clearTimeout(restartTimer);
       restartTimer = null;
     }
-    
+
     if (recognition && currentState === STATES.LISTENING) {
       try {
         recognition.stop();
@@ -632,4 +668,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     handleError("Startup failed.");
   }
 });
-
