@@ -301,6 +301,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         generationConfig: { maxOutputTokens: 3 }
       };
       
+
+      
       const triageResponse = await fetch(`${CONFIG.API_ENDPOINTS.GEMINI_CHAT}?key=${CONFIG.API_KEYS.GEMINI}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
