@@ -1,5 +1,5 @@
 # NOVERA (Demo mode)
-access novera here: https://jaddavidisreal.github.io/NOVERA-v1
+access novera here: https://jadisreal.github.io/NOVERA-v1
 
 
 (formerly Auni)
